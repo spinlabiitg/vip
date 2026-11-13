@@ -1,0 +1,918 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Where the eyes go: gaze and attention · VIP</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #EDF1F3; --bg-grid: #DCE5E9; --surface: #F8FAFB; --surface-2: #E4EAEC;
+    --ink: #16232E; --ink-soft: #2F3E48; --muted: #55666F; --line: #C6D3D9; --line-strong: #9FB2BA;
+    --accent: #A2336F; --accent-ink: #FBEFF5; --s1: #2E6E62; --s2: #B85A28; --err: #B23A3A;
+    --shadow: 0 1px 0 rgba(22,35,46,0.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #161A26; --bg-grid: #1D2333; --surface: #1D2333; --surface-2: #252C40;
+      --ink: #ECEFF5; --ink-soft: #CBD1DE; --muted: #959DB2; --line: #343C55; --line-strong: #4A5473;
+      --accent: #F08CC0; --accent-ink: #2A0716; --s1: #6FCBB8; --s2: #E28A4C; --err: #E2726E;
+      --shadow: 0 1px 0 rgba(0,0,0,0.2);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #161A26; --bg-grid: #1D2333; --surface: #1D2333; --surface-2: #252C40;
+    --ink: #ECEFF5; --ink-soft: #CBD1DE; --muted: #959DB2; --line: #343C55; --line-strong: #4A5473;
+    --accent: #F08CC0; --accent-ink: #2A0716; --s1: #6FCBB8; --s2: #E28A4C; --err: #E2726E;
+    --shadow: 0 1px 0 rgba(0,0,0,0.2);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+  body {
+    margin: 0;
+    background: repeating-linear-gradient(0deg, var(--bg-grid) 0 1px, transparent 1px 32px),
+      repeating-linear-gradient(90deg, var(--bg-grid) 0 1px, transparent 1px 32px), var(--bg);
+    color: var(--ink-soft); font-family: "Work Sans", ui-sans-serif, system-ui, sans-serif;
+    font-size: 17px; line-height: 1.65; -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--accent); color: var(--accent-ink); }
+  a { color: var(--accent); }
+  a:focus-visible, button:focus-visible, .navlink:focus-visible, input:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  h1, h2, h3, h4 { font-family: "Fraunces", ui-serif, Georgia, serif; color: var(--ink); text-wrap: balance; font-weight: 600; margin: 0; }
+  .mono { font-family: "IBM Plex Mono", ui-monospace, "Courier New", monospace; }
+  .eyebrow { font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); font-weight: 500; }
+
+  .topbar {
+    position: relative; z-index: 2; display: flex; align-items: center;
+    gap: clamp(0.75rem, 2vw, 2rem); padding: 0.85rem clamp(1.25rem, 4vw, 3rem);
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    backdrop-filter: blur(6px); border-bottom: 1px solid var(--line); overflow-x: auto;
+  }
+  .topbar .brand { font-family: "IBM Plex Mono", monospace; font-size: 0.78rem; letter-spacing: 0.06em; color: var(--ink); white-space: nowrap; padding-right: clamp(0.5rem, 2vw, 1.5rem); border-right: 1px solid var(--line); }
+  .topbar nav { display: flex; gap: clamp(0.7rem, 1.5vw, 1.3rem); white-space: nowrap; }
+  .navlink { font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); text-decoration: none; padding: 0.2rem 0; border-bottom: 1px solid transparent; }
+  .navlink:hover { color: var(--accent); border-color: var(--accent); }
+
+  main { max-width: 880px; margin: 0 auto; padding: 0 clamp(1rem, 5vw, 2.5rem); }
+  section { padding-block: clamp(2.6rem, 6vw, 4.5rem); border-bottom: 1px solid var(--line); }
+  section:last-of-type { border-bottom: none; }
+
+  .hero { padding-top: clamp(3rem, 8vw, 5rem); }
+  .hero .eyebrow { margin-bottom: 0.9rem; display: block; }
+  .hero h1 { font-size: clamp(2.2rem, 5vw, 3.3rem); line-height: 1.08; letter-spacing: -0.01em; }
+  .hero .dek { margin-top: 1.1rem; max-width: 60ch; font-size: 1.12rem; color: var(--muted); }
+  .hero .byline { margin-top: 1.6rem; font-family: "IBM Plex Mono", monospace; font-size: 0.8rem; color: var(--muted); display: flex; gap: 1.2rem; flex-wrap: wrap; }
+  .hero .byline b { color: var(--ink-soft); font-weight: 500; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 0.8rem; margin-top: 2.2rem; }
+  @media (max-width: 680px) { .stats { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+  .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 0.9rem 1rem; box-shadow: var(--shadow); min-width: 0; }
+  .stat .n { font-family: "Fraunces", serif; font-size: 1.9rem; line-height: 1.05; color: var(--ink); font-weight: 600; }
+  .stat .n small { font-size: 0.95rem; font-weight: 500; color: var(--muted); }
+  .stat .d { font-size: 0.82rem; color: var(--muted); margin-top: 0.35rem; line-height: 1.4; }
+
+  .kicker { display: flex; align-items: baseline; gap: 0.9rem; margin-bottom: 1.4rem; flex-wrap: wrap; }
+  .kicker .num { font-family: "IBM Plex Mono", monospace; font-size: 0.8rem; color: var(--accent); border: 1px solid var(--line-strong); border-radius: 999px; padding: 0.15rem 0.6rem; }
+  h2.title { font-size: clamp(1.55rem, 3.2vw, 2.05rem); }
+  h3.subtitle { font-size: 1.15rem; margin: 2rem 0 0.6rem; }
+  p { margin: 0 0 1.05rem; max-width: 68ch; }
+  p:last-child { margin-bottom: 0; }
+  .lede { font-size: 1.06rem; color: var(--ink-soft); margin-top: 1rem; }
+
+  figure { margin: 1.8rem 0; padding: 1.4rem 1.4rem 1.1rem; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); min-width: 0; }
+  @media (max-width: 520px) { figure { padding: 0.9rem 0.8rem 0.8rem; } }
+  figure svg { display: block; width: 100%; height: auto; }
+  figure img.plate { display: block; width: 100%; height: auto; border-radius: 6px; background: #fff; }
+  figcaption { margin-top: 0.9rem; font-size: 0.85rem; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 0.7rem; }
+  figcaption b { color: var(--ink-soft); font-weight: 600; }
+
+  ul.plain { margin: 0 0 1.05rem; padding-left: 1.2rem; }
+  ul.plain li { margin-bottom: 0.5rem; max-width: 64ch; }
+  ul.plain li::marker { color: var(--accent); }
+
+  .callout { margin: 1.4rem 0; padding: 0.9rem 1.1rem; background: var(--surface-2); border-left: 3px solid var(--accent); border-radius: 6px; font-size: 0.92rem; color: var(--ink-soft); max-width: 66ch; }
+  .callout b { color: var(--ink); font-weight: 600; }
+
+  .side { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin: 1.6rem 0; }
+  @media (max-width: 640px) { .side { grid-template-columns: 1fr; } }
+  .side .box { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 1rem 1.15rem; box-shadow: var(--shadow); min-width: 0; }
+  .side .box .who { font-family: "IBM Plex Mono", monospace; font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+  .side .box p { font-size: 0.93rem; }
+
+  /* numbered observations keyed to a figure */
+  ol.obs { list-style: none; counter-reset: ob; padding: 0; margin: 1.4rem 0; display: grid; gap: 0.7rem; }
+  ol.obs li { counter-increment: ob; display: grid; grid-template-columns: 2rem 1fr; gap: 0.8rem; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 0.85rem 1rem; box-shadow: var(--shadow); font-size: 0.93rem; }
+  ol.obs li::before { content: counter(ob); font-family: "Fraunces", serif; font-size: 1.5rem; line-height: 1; color: var(--accent); font-weight: 600; }
+  ol.obs li b { color: var(--ink); }
+  ol.obs li .why { display: block; margin-top: 0.3rem; color: var(--muted); font-size: 0.88rem; }
+
+  /* controls */
+  .field-label { font-family: "IBM Plex Mono", monospace; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.45rem; display: block; }
+  .btnrow { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .btn { font-family: "IBM Plex Mono", monospace; font-size: 0.76rem; padding: 0.42rem 0.8rem; border-radius: 7px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-soft); cursor: pointer; }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn[aria-pressed="true"], .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn:disabled { opacity: 0.5; cursor: default; }
+  .slider-row { display: flex; align-items: center; gap: 0.7rem; }
+  .slider-row .nm { font-family: "IBM Plex Mono", monospace; font-size: 0.76rem; color: var(--ink-soft); width: 8.5em; flex-shrink: 0; }
+  .slider-row input[type="range"] { flex: 1; min-width: 0; accent-color: var(--accent); }
+  .slider-row .val { font-family: "IBM Plex Mono", monospace; font-size: 0.78rem; color: var(--ink); width: 4.2em; text-align: right; font-variant-numeric: tabular-nums; }
+  .ctrls { display: grid; gap: 0.8rem; margin-top: 1.1rem; }
+  .ctrl-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem 1.4rem; }
+  @media (max-width: 720px) { .ctrl-grid { grid-template-columns: 1fr; } }
+  .hint { font-size: 0.82rem; color: var(--muted); margin: 0.6rem 0 0; }
+
+  /* acuity chart */
+  .chart-wrap { position: relative; }
+  .tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--surface); font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; padding: 0.35rem 0.55rem; border-radius: 6px; white-space: nowrap; transform: translate(-50%, calc(-100% - 10px)); opacity: 0; transition: opacity 80ms; z-index: 3; }
+  .tip.on { opacity: 1; }
+
+  /* foveation demo */
+  .fovea-stage { position: relative; width: 100%; max-width: 560px; margin: 0 auto; aspect-ratio: 552 / 506; border-radius: 8px; overflow: hidden; touch-action: none; cursor: crosshair; background: #ddd; }
+  .fovea-stage img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; user-select: none; -webkit-user-drag: none; }
+  .fovea-stage .blurred { filter: blur(var(--blur, 7px)) contrast(0.85); transform: scale(1.03); }
+  .fovea-stage .sharp {
+    -webkit-mask-image: radial-gradient(circle var(--r, 40px) at var(--x, 50%) var(--y, 40%), #000 55%, transparent 100%);
+            mask-image: radial-gradient(circle var(--r, 40px) at var(--x, 50%) var(--y, 40%), #000 55%, transparent 100%);
+  }
+  .fovea-stage.off .sharp { -webkit-mask-image: none; mask-image: none; }
+  .fovea-stage .trail { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+  /* moving window */
+  .mw { font-family: "IBM Plex Mono", monospace; font-size: clamp(0.82rem, 2.3vw, 1rem); line-height: 2.1; color: var(--ink); background: var(--surface-2); border-radius: 8px; padding: 0.9rem 1rem; cursor: text; touch-action: none; user-select: none; overflow: hidden; }
+  .mw .ln { white-space: pre; height: 2.1em; }
+  .mw .fx { background: color-mix(in srgb, var(--accent) 28%, transparent); border-radius: 2px; }
+  .mw .vis { color: var(--ink); }
+  .mw .mask { color: var(--muted); }
+  .mw-measure { position: absolute; visibility: hidden; white-space: pre; font-family: "IBM Plex Mono", monospace; }
+
+  /* perceptual span diagram */
+  .ps { overflow-x: auto; padding-bottom: 0.3rem; }
+  .ps-grid { display: grid; grid-template-columns: repeat(43, minmax(0, 1fr)); min-width: 300px; row-gap: 4px; font-family: "IBM Plex Mono", monospace; }
+  .ps-grid .c { text-align: center; font-size: clamp(0.66rem, 2.2vw, 1.15rem); line-height: 1.9; color: var(--muted); }
+  .ps-grid .c.left { background: color-mix(in srgb, var(--s1) 22%, transparent); color: var(--ink); }
+  .ps-grid .c.id { background: color-mix(in srgb, var(--accent) 30%, transparent); color: var(--ink); font-weight: 600; }
+  .ps-grid .c.feat { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--ink); }
+  .ps-grid .c.fix { background: var(--accent); color: var(--accent-ink); font-weight: 600; border-radius: 3px; }
+  .ps-grid .c.x { color: var(--muted); }
+  .ps-grid .eye { text-align: center; font-size: 0.8rem; color: var(--accent); line-height: 1; }
+  .ps-grid .br { border: 1.5px solid var(--line-strong); border-top: none; height: 8px; border-radius: 0 0 4px 4px; margin: 0 1px; }
+  .ps-grid .br.l { border-color: var(--s1); } .ps-grid .br.i { border-color: var(--accent); }
+  .ps-grid .lab { font-size: 0.68rem; line-height: 1.3; color: var(--ink-soft); text-align: center; padding-top: 2px; }
+  @media (max-width: 520px) { .ps-grid .lab { font-size: 0.6rem; }  }
+  .ps-grid .nw { white-space: nowrap; }
+  .ps-grid .rowlab { grid-column: 1 / -1; font-size: 0.64rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-top: 0.5rem; }
+  .ps-key { display: flex; flex-wrap: wrap; gap: 0.5rem 1.1rem; margin-top: 0.9rem; font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; color: var(--ink-soft); }
+  .ps-key span { display: inline-flex; align-items: center; gap: 0.4rem; }
+  .ps-key .sw { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+  .ps-key .sw.fix { background: var(--accent); } .ps-key .sw.id { background: color-mix(in srgb, var(--accent) 30%, transparent); }
+  .ps-key .sw.feat { background: color-mix(in srgb, var(--accent) 12%, transparent); border: 1px solid var(--line); } .ps-key .sw.left { background: color-mix(in srgb, var(--s1) 22%, transparent); }
+
+  /* search experiment */
+  .search { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.4rem; align-items: start; }
+  @media (max-width: 720px) { .search { grid-template-columns: 1fr; } }
+  .search-stage { position: relative; aspect-ratio: 1; background: var(--surface-2); border-radius: 10px; border: 1px solid var(--line); overflow: hidden; }
+  .search-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .search-stage .msg { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 1.4rem; font-size: 0.92rem; color: var(--ink-soft); }
+  .search-stage .msg[hidden] { display: none; }
+  .legend { display: flex; gap: 1.1rem; flex-wrap: wrap; font-family: "IBM Plex Mono", monospace; font-size: 0.74rem; color: var(--ink-soft); margin-bottom: 0.4rem; }
+  .legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+  .progress { font-family: "IBM Plex Mono", monospace; font-size: 0.74rem; color: var(--muted); margin-top: 0.6rem; }
+  table.mini { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 0.8rem; font-variant-numeric: tabular-nums; }
+  table.mini th, table.mini td { border: 1px solid var(--line); padding: 0.35rem 0.5rem; text-align: right; }
+  table.mini th:first-child, table.mini td:first-child { text-align: left; }
+  table.mini th { background: var(--surface-2); font-family: "IBM Plex Mono", monospace; font-size: 0.68rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink); font-weight: 500; }
+
+  table.cmp { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin: 1.6rem 0; }
+  table.cmp th, table.cmp td { padding: 0.65rem 0.8rem; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+  table.cmp th { background: var(--surface-2); color: var(--ink); font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; }
+  table.cmp td.label { font-weight: 600; color: var(--ink); background: var(--surface); }
+  table.cmp td.num { font-family: "IBM Plex Mono", monospace; font-size: 0.82rem; white-space: nowrap; }
+  .table-wrap { overflow-x: auto; }
+
+  /* attention two-axis */
+  .grid2x2 { display: grid; grid-template-columns: 7rem 1fr 1fr; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin: 1.6rem 0; background: var(--surface); }
+  .grid2x2 > div { padding: 0.8rem 0.9rem; border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); font-size: 0.88rem; min-width: 0; }
+  .grid2x2 > div:nth-child(3n) { border-right: none; }
+  .grid2x2 > div:nth-last-child(-n+3) { border-bottom: none; }
+  .grid2x2 .hd { font-family: "IBM Plex Mono", monospace; font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink); background: var(--surface-2); }
+  .grid2x2 b { color: var(--ink); }
+  @media (max-width: 560px) { .grid2x2 { grid-template-columns: 4.8rem 1fr 1fr; } .grid2x2 > div { padding: 0.6rem; font-size: 0.8rem; } }
+
+  .take { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1rem; margin: 1.6rem 0; }
+  @media (max-width: 680px) { .take { grid-template-columns: 1fr; } }
+  .take .k { background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--accent); border-radius: 10px; padding: 0.95rem 1.1rem; box-shadow: var(--shadow); }
+  .take .k h3 { font-size: 1.05rem; margin-bottom: 0.4rem; }
+  .take .k p { font-size: 0.9rem; margin: 0; }
+
+  .refs { font-family: "IBM Plex Mono", monospace; font-size: 0.78rem; color: var(--muted); line-height: 1.8; padding-left: 1.2rem; }
+  .refs li { margin-bottom: 0.3rem; }
+  footer { padding-block: 2.5rem 4rem; font-family: "IBM Plex Mono", monospace; font-size: 0.76rem; color: var(--muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.8rem; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .tip { transition: none; } }
+  figcaption .credit { display: block; margin-top: 0.35rem; font-size: 0.85em; opacity: 0.85; }
+</style>
+<!--ai:head--><link rel="stylesheet" href="../assets/site.css?v=592b11fb"><!--/ai:head-->
+</head>
+<body>
+<!--ai:nav--><nav class="ai-nav" aria-label="Course navigation"><div class="ai-nav-in"><a class="ai-brand" href="../index.html" title="Vision and Image Processing"><span class="ai-logo" aria-hidden="true">▦</span><span class="ai-brand-full">Vision and Image Processing</span><span class="ai-brand-short">VIP</span></a><span class="ai-where">Module 2 &middot; Where the eyes go: gaze, reading and visual attention</span><details class="ai-menu"><summary>All pages</summary><ul><li><a href="../fourier_2d/index.html">1. The 2-D Fourier transform, built from the ground up</a></li><li><a href="index.html" aria-current="page">2. Where the eyes go: how people scan text and scenes</a></li></ul></details><a class="ai-step ai-prev" href="../fourier_2d/index.html" title="The 2-D Fourier transform, built from the ground up">← prev</a><span class="ai-step ai-next ai-off">next →</span></div></nav><!--/ai:nav-->
+
+<div class="topbar">
+  <span class="brand">On this page</span>
+  <nav>
+    <a class="navlink" href="#fovea">The Fovea</a>
+    <a class="navlink" href="#reading">Reading</a>
+    <a class="navlink" href="#window">Moving Window</a>
+    <a class="navlink" href="#scenes">Scenes</a>
+    <a class="navlink" href="#attention">Attention</a>
+    <a class="navlink" href="#search">Search Lab</a>
+    <a class="navlink" href="#machines">Machines</a>
+    <a class="navlink" href="#takeaways">Takeaways</a>
+  </nav>
+</div>
+
+<main>
+
+  <section class="hero">
+    <span class="eyebrow">Module 2 · Tutorial</span>
+    <h1>Where the eyes go: how people scan text and scenes</h1>
+    <p class="dek">Your vision feels like a sharp, complete picture of the world. It isn't. Only a tiny patch at the centre of gaze is sharp, so the eyes have to jump from place to place three or four times a second to build up the picture. Where those jumps land depends on what you are looking at and on what you are trying to find out. This page uses two classic eye-tracking recordings, one of a person reading and one of a person viewing a painting, to show what gaze reveals about the visual system and how it relates to attention.</p>
+    <div class="byline">
+      <span><b>Javal</b> 1879 · <b>Huey</b> 1908 · <b>Buswell</b> 1935 · <b>Yarbus</b> 1967 · <b>Posner</b> 1980 · <b>Rayner</b> 1998</span>
+    </div>
+    <div class="stats" aria-label="Key numbers">
+      <div class="stat"><div class="n">~2<small>°</small></div><div class="d">Width of the sharp foveal region: about your thumbnail held at arm's length.</div></div>
+      <div class="stat"><div class="n">3–4<small>/s</small></div><div class="d">Saccades per second. That adds up to well over 100,000 a day.</div></div>
+      <div class="stat"><div class="n">~250<small>ms</small></div><div class="d">Typical fixation in silent reading. Scene fixations run a little longer.</div></div>
+      <div class="stat"><div class="n" style="font-size:1.5rem;white-space:nowrap">3–4 <small>+</small> 14–15</div><div class="d">The perceptual span: letters a skilled English reader uses to the left and to the right of the fixated letter. <a href="#span">See the diagram</a>.</div></div>
+    </div>
+  </section>
+
+  <!-- ===================================================== -->
+  <section id="fovea">
+    <div class="kicker"><span class="num">1</span><span class="eyebrow">Why eyes move at all</span></div>
+    <h2 class="title">A sharp centre and a blurry surround</h2>
+    <p class="lede">The retina is not uniform. Cone photoreceptors are packed most densely in the <b>fovea</b>, a pit about 1.5 mm across at the centre of the retina, and their density falls steeply away from it. The visual cortex amplifies this imbalance further. A disproportionate share of primary visual cortex (V1) is given to the central few degrees, a property called <b>cortical magnification</b>. The result is that fine detail can be seen only where you are pointing your eyes.</p>
+
+    <figure>
+      <div class="chart-wrap" id="acuityWrap">
+        <svg id="acuity" viewBox="0 0 640 300" role="img" aria-label="Relative visual acuity falls from 1.0 at the centre of gaze to about 0.5 at 2 degrees, 0.2 at 8 degrees and under 0.1 at 30 degrees"></svg>
+        <div class="tip" id="acuityTip"></div>
+      </div>
+      <figcaption><b>Acuity falls off steeply with eccentricity.</b> Curve shows relative acuity ≈ 1 / (1 + E / E₂) with E₂ ≈ 2°, a standard approximation for letter acuity. Shaded bands use the eye-movement convention of Rayner (1998): <b>foveal</b> (central 2°), <b>parafoveal</b> (to about 5° each side) and <b>peripheral</b> (beyond). At normal reading distance, 1° covers about 3–4 letters. Hover to read off values.</figcaption>
+    </figure>
+
+    <p>The eyes therefore alternate between two states:</p>
+    <ul class="plain">
+      <li><b>Fixations</b> (≈ 200–350 ms). The eye is held almost still and visual information is taken in. Even during a fixation the eye is not perfectly still: tiny drifts, tremor and <em>microsaccades</em> keep the image from fading.</li>
+      <li><b>Saccades</b> (≈ 20–50 ms). Fast, ballistic jumps that move the fovea to a new target. Vision is largely suppressed while the eye is moving (<b>saccadic suppression</b>). That is why you never see the world smear, and why you cannot see your own eyes move in a mirror.</li>
+    </ul>
+    <p>Because a saccade takes around 150–200 ms to plan and launch, the brain has to choose the next target <em>before</em> it has seen that location in detail. It uses blurry peripheral information plus whatever it already knows and wants. Choosing where to look next is the central problem the rest of this page is about.</p>
+
+    <h3 class="subtitle">Try it: see the painting through a fovea</h3>
+    <p>The panel below shows the painting used in the Yarbus experiment (section 4). Everything outside a small window is blurred, roughly as it would be in your periphery. Move your pointer or finger over it and notice how you start choosing targets: faces first, then hands and objects.</p>
+    <figure>
+      <div class="fovea-stage" id="foveaStage" tabindex="0" aria-label="Painting with a sharp window that follows the pointer; arrow keys also move it">
+        <img class="blurred" alt="" src="img/repin_unexpected_visitors.jpg">
+        <img class="sharp" alt="Ilya Repin's painting 'Unexpected Visitors': a man in a long coat enters a room where a seated woman, a standing woman at the door, and children turn to look at him." src="img/repin_unexpected_visitors.jpg">
+        <svg class="trail" id="foveaTrail" viewBox="0 0 552 506" preserveAspectRatio="none" aria-hidden="true"></svg>
+      </div>
+      <div class="ctrls">
+        <div class="ctrl-grid">
+          <div class="slider-row"><span class="nm">Fovea radius</span><input type="range" id="fovR" min="20" max="160" value="45" aria-label="Fovea radius"><span class="val" id="fovRv">45 px</span></div>
+          <div class="slider-row"><span class="nm">Peripheral blur</span><input type="range" id="fovB" min="0" max="16" value="7" aria-label="Peripheral blur"><span class="val" id="fovBv">7 px</span></div>
+        </div>
+        <div class="btnrow">
+          <button class="btn" id="fovOff" aria-pressed="false">Show whole image sharp</button>
+          <button class="btn" id="fovTrail" aria-pressed="true">Record my scanpath</button>
+          <button class="btn" id="fovClear">Clear scanpath</button>
+        </div>
+      </div>
+      <figcaption><b>A rough simulation, not a model of the eye.</b> Real peripheral vision is not simply blurred. It also suffers from <em>crowding</em>, where features run together, and it loses colour sensitivity. Pauses of more than about 150 ms are recorded as "fixations", so the trail is a crude version of what an eye-tracker records. <span class="credit">Painting: Ilya Repin, <em>Unexpected Visitors</em> (1884–88), public domain.</span></figcaption>
+    </figure>
+  </section>
+
+  <!-- ===================================================== -->
+  <section id="reading">
+    <div class="kicker"><span class="num">2</span><span class="eyebrow">Gaze on text</span></div>
+    <h2 class="title">Reading is a sequence of jumps, not a smooth glide</h2>
+    <p class="lede">Most readers feel their eyes sweep smoothly along each line. In 1879 the French ophthalmologist Louis Émile Javal watched readers' eyes and saw that they actually move in a series of short jumps. The recording below shows the same thing. Each circle is a <b>fixation</b>, each straight line between circles is a <b>saccade</b>, and circle size usually encodes how long the fixation lasted.</p>
+
+    <figure>
+      <img class="plate" alt="Eye-tracking scanpath over a Swedish paragraph titled 'Dans, kön och jagprojekt'. Magenta circles mark fixations along each line, connected by saccade lines, with long diagonal return sweeps from the end of each line to the start of the next." src="img/reading_scanpath.jpg">
+      <figcaption><b>A reader's scanpath over a Swedish academic paragraph.</b> Hatched circles are fixations, magenta lines are saccades, and the small red circle (bottom right) marks where the recording ended. Notice the long diagonal <em>return sweeps</em> from each line ending to the start of the next line. <span class="credit">Recording: Humanistlaboratoriet, Lund University (2005), via <a href="https://commons.wikimedia.org/wiki/File:Reading_Fixations_Saccades.jpg" target="_blank" rel="noopener">Wikimedia Commons</a>, public domain.</span></figcaption>
+    </figure>
+
+    <h3 class="subtitle">What this one recording shows</h3>
+    <ol class="obs">
+      <li><div><b>Fixations land on words, not on every letter.</b> Each line of about 55–60 characters gets roughly 7–10 fixations, so a typical forward saccade spans about 6–9 characters.<span class="why">Rayner's (1998) review puts the average saccade in reading at 7–9 letter spaces. Saccade length scales with letters, not with visual angle: if you hold the page closer, saccades get bigger in degrees but stay about the same in letters.</span></div></li>
+      <li><div><b>Short words are often skipped.</b> On the first line "och den" (<em>and the</em>) gets no fixation, and many instances of "i", "på", "av" are passed over.<span class="why">Content words are fixated about 85% of the time and short function words only about 35% of the time. A skipped word is still read. It was identified in the parafovea during the previous fixation.</span></div></li>
+      <li><div><b>Long words get two fixations.</b> "kroppsspråk", "synkretiska", "sammansmältning" and "identitetsprövningen" each receive two or more fixations.<span class="why">Long compound words, which are common in Swedish, do not fit in a single foveal "glimpse". The first fixation tends to land a little left of the word's centre (the <em>preferred viewing location</em>), and a refixation picks up the rest.</span></div></li>
+      <li><div><b>Fixations differ in length.</b> The circles vary in size.<span class="why">How long a word is fixated depends on how easy it is to process. Rarer words, less predictable words and longer words get longer fixations (frequency, predictability and length effects). Eye movements give a moment-by-moment record of language processing, which is why psycholinguists use them.</span></div></li>
+      <li><div><b>The line edges are never fixated.</b> The first fixation on a line lands a few letters in, and the last one lands several letters before the end. On the first line the indented word "På" is not fixated at all.<span class="why">The first and last few letters are read from the parafovea, so fixating them would waste a saccade. Return sweeps often <em>undershoot</em>, and a small corrective saccade follows. You can see this at the start of the lines beginning "dansen'" and "identitetsprövningen".</span></div></li>
+      <li><div><b>Not every saccade moves forward.</b> There is a leftward jump in the heading, and there are a few short backward saccades within lines.<span class="why">About 10–15% of saccades in skilled reading are <em>regressions</em>. They happen when a word was misread, when the sentence turns out to be ambiguous, or when the eye overshot its target. Regressions are more frequent with difficult text and with less skilled readers.</span></div></li>
+    </ol>
+
+    <div class="callout"><b>The key point:</b> the eyes do not take in text at a constant rate. Each fixation is a decision, made about 4 times a second, about <em>where</em> to land next and <em>how long</em> to stay. Both decisions are driven by how quickly the language system is processing the words. Computational models such as <b>E-Z Reader</b> (Reichle et al., 1998) and <b>SWIFT</b> (Engbert et al., 2005) treat reading as a coupling between attention, word recognition and eye movements. They reproduce skipping rates, fixation durations and regressions closely.</div>
+  </section>
+
+  <!-- ===================================================== -->
+  <section id="window">
+    <div class="kicker"><span class="num">3</span><span class="eyebrow">Perceptual span</span></div>
+    <h2 class="title">How much can a reader see in one fixation?</h2>
+    <p class="lede">McConkie and Rayner (1975) answered this with the <b>moving-window paradigm</b>. An eye-tracker updates the screen in real time so that only a window of normal text around the point of fixation is shown, and every letter outside it is replaced with <span class="mono">x</span>. If the window is large enough, readers do not notice and read at normal speed. Shrink it and reading slows down. The smallest window that still allows normal reading is the <b>perceptual span</b>.</p>
+
+    <figure id="span">
+      <div class="ps" id="psDiagram" role="img" aria-label="Diagram of the perceptual span. In the sentence 'the man was reading a long book about birds', the eyes fixate the letter r of 'reading'. The span covers 4 letters to the left, 'was ', and 15 letters to the right, 'eading a long b'. Words are fully identified only up to about 7 to 8 letters right, 'eading a'. Beyond that, only letter shapes and word lengths are picked up. Below, the moving-window version of the same line shows letters outside the span replaced by x."></div>
+      <div class="ps-key">
+        <span><i class="sw fix"></i>Fixated letter</span>
+        <span><i class="sw id"></i>Word identification (≈ 7–8 right)</span>
+        <span><i class="sw feat"></i>Letter features &amp; word length only</span>
+        <span><i class="sw left"></i>Left side (3–4 letters)</span>
+      </div>
+      <figcaption><b>One fixation, about 19 useful letters.</b> The eyes rest on the <b>r</b> of "reading". About 3–4 letters to the left ("was ") are used, mostly to keep your place in text already read. To the right, the next 7–8 letters ("eading a") are close enough to the fovea for words to be <em>identified</em>. Further out, up to 14–15 letters ("long b"), the reader gets only coarse information: rough letter shapes, word lengths and where the spaces fall. That information is used to choose the next landing point. The bottom row shows what the moving-window experiment displays: everything outside the span becomes <span class="mono">x</span>, and readers do not notice the difference.</figcaption>
+    </figure>
+
+    <h3 class="subtitle">How the span was measured</h3>
+    <p>The basic logic: if hiding some letters does not change how a person reads, those letters were not being used. To hide letters <em>only where the reader is not looking</em>, the display has to follow the eyes.</p>
+    <ol class="obs">
+      <li><div><b>Track the eyes.</b> The reader sits with the head held steady, often on a chin rest or bite bar, while an eye-tracker samples gaze position hundreds to thousands of times a second.<span class="why">Early studies such as McConkie and Rayner's used a computer connected to an eye-tracker. Modern systems such as the EyeLink sample at 1000 Hz or more, and display changes take only a few milliseconds.</span></div></li>
+      <li><div><b>Change the screen during each saccade.</b> Whenever the eye starts to move, the computer redraws the line so that normal text appears only around the new landing point.<span class="why">Because vision is suppressed during a saccade, the swap is invisible. Readers usually do not notice that most of the line is x's, even though it changes every quarter of a second.</span></div></li>
+      <li><div><b>Vary the window.</b> Across trials the window is made larger or smaller, and moved left or right of fixation. The material outside it is also varied: x's, look-alike letters, or random letters, with the spaces kept or filled in.<span class="why">Comparing these replacements shows <em>what kind</em> of information is used at each distance. If keeping the spaces matters far out, then word length is being used there. If look-alike letters help, then letter shape is being used.</span></div></li>
+      <li><div><b>Measure reading, not opinions.</b> The outcome measures are reading speed, fixation durations, saccade lengths and the number of regressions.<span class="why">The span is the smallest window at which all these measures match reading with no window at all. For English that is about 3–4 letters to the left and 14–15 to the right (McConkie &amp; Rayner, 1975, 1976; Rayner, 1998).</span></div></li>
+    </ol>
+
+    <h3 class="subtitle">Two companion experiments</h3>
+    <div class="side">
+      <div class="box">
+        <div class="who">Moving mask (Rayner &amp; Bertera, 1979)</div>
+        <p>The reverse of the window: the letters <em>at</em> fixation are masked and the periphery is left intact. With a 7-letter foveal mask, reading becomes almost impossible. The parafovea can support reading but cannot replace the fovea.</p>
+      </div>
+      <div class="box">
+        <div class="who">Boundary paradigm (Rayner, 1975)</div>
+        <p>A single target word is replaced by a "preview" until the eyes cross an invisible boundary just before it. A correct preview shortens the later fixation on that word by roughly 20–50 ms. This is the <b>preview benefit</b>: proof that the next word is already being processed.</p>
+      </div>
+    </div>
+
+    <h3 class="subtitle">Try it yourself</h3>
+    <p>The demo below is a pointer-driven version of the same idea. Your pointer stands in for your gaze.</p>
+
+    <figure>
+      <div class="mw" id="mw" tabindex="0" aria-label="Moving-window text. Move the pointer across a line, or use the arrow keys, to move the visible window."></div>
+      <div class="ctrls">
+        <div class="ctrl-grid">
+          <div class="slider-row"><span class="nm">Letters left</span><input type="range" id="mwL" min="0" max="20" value="4" aria-label="Letters visible to the left"><span class="val" id="mwLv">4</span></div>
+          <div class="slider-row"><span class="nm">Letters right</span><input type="range" id="mwR" min="0" max="25" value="14" aria-label="Letters visible to the right"><span class="val" id="mwRv">14</span></div>
+        </div>
+        <div class="btnrow">
+          <span class="field-label" style="margin:0.4rem 0.4rem 0 0">Presets</span>
+          <button class="btn" data-mw="4,14" aria-pressed="true">English span · 4 + 14</button>
+          <button class="btn" data-mw="3,3" aria-pressed="false">Fovea only · 3 + 3</button>
+          <button class="btn" data-mw="14,4" aria-pressed="false">Mirrored · 14 + 4</button>
+          <button class="btn" data-mw="0,0" aria-pressed="false">One letter</button>
+          <button class="btn" id="mwSpaces" aria-pressed="true">Keep spaces</button>
+        </div>
+      </div>
+      <p class="hint">Move along a line from left to right, as if you were reading it. With the 4 + 14 window, reading feels almost normal. With the mirrored window, the same 18 letters suddenly give much less help. Turn off <em>Keep spaces</em> and word boundaries disappear, which disrupts where you would aim your next saccade.</p>
+    </figure>
+
+    <h3 class="subtitle">The span is lopsided, which tells us it is attention and not acuity</h3>
+    <p>For readers of English the perceptual span runs from about <b>3–4 letters to the left</b> of fixation to about <b>14–15 letters to the right</b> (McConkie &amp; Rayner, 1976). Acuity on the retina is symmetric, so the asymmetry cannot come from the eye. It comes from where the reader is <em>attending</em>, which is the direction they are about to read. The left edge is closer to "the start of the word being fixated" than to a fixed number of letters: text already read is no longer needed.</p>
+
+    <h3 class="subtitle">What changes the size of the span</h3>
+    <div class="table-wrap">
+      <table class="cmp">
+        <thead><tr><th>Factor</th><th>What happens to the span</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr><td class="label">Writing direction</td><td>Hebrew is read right to left, and the span flips: it extends further to the <b>left</b>. The same bilingual reader shifts the asymmetry when switching between English and Hebrew.</td><td class="num">Pollatsek et al., 1981</td></tr>
+          <tr><td class="label">Information density of the script</td><td>The denser each character, the fewer characters in the span. Chinese: about 1 character left and 2–3 right. Japanese mixed kanji–kana text: about 6 characters right. In terms of <em>information</em> the spans are more alike than the character counts suggest.</td><td class="num">Inhoff &amp; Liu, 1998; Ikeda &amp; Saida, 1978</td></tr>
+          <tr><td class="label">Reading skill</td><td>Beginning readers have a smaller span (about 11 letters right in early primary school) that grows with practice. Readers with dyslexia have also been reported to show smaller spans.</td><td class="num">Rayner, 1986; Häikiö et al., 2009</td></tr>
+          <tr><td class="label">Age</td><td>Older adult readers show a smaller and more symmetric span than young adults, consistent with less attention to spare for the upcoming text.</td><td class="num">Rayner et al., 2009</td></tr>
+          <tr><td class="label">Difficulty of the fixated word</td><td>When the word being fixated is hard (rare, long or unexpected), the span to the right shrinks and preview benefit drops. Attention is busy at the fovea and does not get far ahead. This is called "foveal load".</td><td class="num">Henderson &amp; Ferreira, 1990</td></tr>
+          <tr><td class="label">Lines above and below</td><td>The span is essentially restricted to the line being read. Readers get little or no useful information from the line below.</td><td class="num">Pollatsek et al., 1993</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="subtitle">Three spans inside the span</h3>
+    <p>"Perceptual span" is the outer limit. Inside it, different kinds of information reach different distances (Rayner, Well, Pollatsek &amp; Bertera, 1982; Rayner, 1998):</p>
+    <ul class="plain">
+      <li><b>Word-identification span</b>, about 7–8 letters to the right. Words are actually recognised here. Usually this covers the fixated word and, if it is short, the next word. This is where skipping decisions come from.</li>
+      <li><b>Letter-identity span</b>, about 8–10 letters to the right. Partial information, such as the first letters of the next word, is picked up and speeds its later recognition.</li>
+      <li><b>Word-length span</b>, out to about 14–15 letters. Only the spaces are useful here. They tell the eye where the next word starts and how long it is, which sets the landing point of the next saccade.</li>
+    </ul>
+
+    <div class="callout"><b>Why this matters beyond reading research:</b> the perceptual span is one of the cleanest measurements of attention in everyday behaviour. It shows that what you take in during a glance is decided by goals and by how busy you are, not just by optics. The same idea runs through the scene-viewing and visual-search results later on this page.</div>
+
+    <div class="callout"><b>Possible class project.</b> Much of the reading research above was done with English, German, Finnish, Hebrew and Chinese. Indian scripts are written in <em>akshara</em>, syllabic units built from stacked consonant clusters and vowel signs, so the information per character differs from both alphabets and Chinese. How large is the perceptual span for Assamese, Bengali or Devanagari text, and should it be counted in letters, akshara or words? This is relatively unexplored territory, and it could be tested with a webcam-based gaze tracker or a moving-window version of the demo above.</div>
+  </section>
+
+  <!-- ===================================================== -->
+  <section id="scenes">
+    <div class="kicker"><span class="num">4</span><span class="eyebrow">Gaze on scenes</span></div>
+    <h2 class="title">Same picture, different question, different scanpath</h2>
+    <p class="lede">In the 1960s the Russian psychologist Alfred Yarbus recorded eye movements with a small mirror attached to the eye by a suction cap. In his best-known experiment one observer looked at Ilya Repin's painting <em>Unexpected Visitors</em> (also known as <em>They Did Not Expect Him</em>). The observer viewed it seven times, three minutes each time, and each time was given a different question.</p>
+
+    <figure>
+      <img class="plate" alt="Yarbus's figure: the Repin painting at top left, followed by seven eye-movement traces of the same observer, each recorded under a different instruction, from free examination to estimating how long the visitor had been away." src="img/yarbus_traces.jpg">
+      <figcaption><b>Yarbus (1967), task-dependent scanpaths.</b> One observer, one painting, seven instructions, three-minute recordings. Dense black knots are clusters of fixations and thin lines are saccades. This is the commonly reproduced redrawing of Yarbus's original figure. <span class="credit">Figure: after Yarbus (1967), via <a href="https://commons.wikimedia.org/wiki/File:Yarbus_The_Visitor.jpg" target="_blank" rel="noopener">Wikimedia Commons</a>, public domain.</span></figcaption>
+    </figure>
+
+    <h3 class="subtitle">Reading the seven traces</h3>
+    <div class="table-wrap">
+      <table class="cmp">
+        <thead><tr><th>#</th><th>Instruction</th><th>Where the gaze went</th></tr></thead>
+        <tbody>
+          <tr><td class="label">1</td><td>Free examination</td><td>Heavy clustering on the <b>faces</b> across the top band of the picture, especially the visitor and the woman rising from the chair. Faces dominate even when no task asks for them.</td></tr>
+          <tr><td class="label">2</td><td>Estimate the family's material circumstances</td><td>Gaze spreads to the <b>furniture, walls, pictures and clothing</b>. Most of the picture gets sampled, with a concentration on the right half, where the room's contents are.</td></tr>
+          <tr><td class="label">3</td><td>Give the ages of the people</td><td>Tight, isolated knots on <b>each face</b> with fast jumps between them. Almost nothing else is looked at.</td></tr>
+          <tr><td class="label">4</td><td>What had the family been doing before the visitor arrived?</td><td>The trace runs between people and the <b>objects near them</b>, such as the table, chairs and piano, as if checking the activity around each person.</td></tr>
+          <tr><td class="label">5</td><td>Remember the clothes worn</td><td><b>Vertical</b> strokes running down each figure from head to feet, unlike the face-only knots of trace 3.</td></tr>
+          <tr><td class="label">6</td><td>Remember positions of people and objects</td><td>The <b>widest coverage</b> of all seven: gaze roams the whole canvas, including the floor and empty space, to build a spatial map.</td></tr>
+          <tr><td class="label">7</td><td>How long had the visitor been away?</td><td>A dense <b>back-and-forth</b> between the visitor's face and the family's faces. The answer lies in their expressions: surprise, recognition, uncertainty.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Yarbus's conclusion still shapes vision science: <b>eye movements reflect the human thought processes</b> behind them. The same image, with the same pixels and the same salient edges, produces systematically different gaze depending on what the viewer is trying to find out. The visual system does not passively record a scene. It actively queries it.</p>
+
+    <h3 class="subtitle">What else we know about looking at scenes</h3>
+    <ul class="plain">
+      <li><b>The gist comes first.</b> A single glance of about 100 ms is enough to tell a beach from a kitchen and to pick out its layout (Potter, 1976; Oliva &amp; Torralba, 2006). That first glance guides where the first saccades go.</li>
+      <li><b>People, faces and text attract fixations</b> strongly, and almost regardless of task (Cerf et al., 2009). Trace 1 shows this.</li>
+      <li><b>Centre bias.</b> Viewers look at the middle of an image more than at its edges, whatever the image shows (Tatler, 2007). This is partly a photographer's habit and partly a good strategy.</li>
+      <li><b>Meaning beats brightness.</b> When "meaning maps" (crowd-rated regions of informative content) compete with low-level image salience, meaning predicts fixations better (Henderson &amp; Hayes, 2017).</li>
+      <li><b>Scanpaths repeat, partly.</b> Noton and Stark (1971) found that viewers tend to replay similar fixation sequences when they see an image again, but the sequences vary a lot from person to person.</li>
+    </ul>
+
+    <div class="callout"><b>A healthy scientific debate.</b> Yarbus had one observer, a famous painting and long viewing times. Greene, Liu and Wolfe (2012) recorded many observers and tried to decode the task from summary eye-movement statistics. They could not. Borji and Itti (2014) reanalysed the data with richer features and decoded the task above chance, and DeAngelus and Pelz (2009) reproduced Yarbus's qualitative pattern with modern equipment. The current view is that <b>the task clearly shapes gaze</b>, but the signature is subtler and noisier than the striking original figure suggests.</div>
+
+    <h3 class="subtitle">Reading versus scene viewing in numbers</h3>
+    <div class="table-wrap">
+      <table class="cmp">
+        <thead><tr><th>Task</th><th>Mean fixation</th><th>Mean saccade size</th><th>What mainly drives the next saccade</th></tr></thead>
+        <tbody>
+          <tr><td class="label">Silent reading</td><td class="num">225–250 ms</td><td class="num">≈ 2° (8–9 letters)</td><td>Word recognition, word length and spaces, linguistic difficulty</td></tr>
+          <tr><td class="label">Oral reading</td><td class="num">275–325 ms</td><td class="num">≈ 1.5° (6–7 letters)</td><td>As above, held back by the slower speaking voice</td></tr>
+          <tr><td class="label">Visual search</td><td class="num">180–275 ms</td><td class="num">≈ 3°</td><td>Target features: colour, shape, expected location</td></tr>
+          <tr><td class="label">Scene perception</td><td class="num">260–330 ms</td><td class="num">≈ 4°</td><td>Gist, meaning, faces, task goals, some low-level salience</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:0.85rem;color:var(--muted)">Values from Rayner (1998), Table 1. They vary considerably with text difficulty, image content and individual viewer.</p>
+  </section>
+
+  <!-- ===================================================== -->
+  <section id="attention">
+    <div class="kicker"><span class="num">5</span><span class="eyebrow">The link to attention</span></div>
+    <h2 class="title">Gaze is attention you can see, but not all attention moves the eyes</h2>
+    <p class="lede">Both recordings above are, at heart, records of <b>attention</b>: the brain's way of selecting a small part of the incoming information for detailed processing. The visual system cannot fully process everything in the visual field at once. The fovea is the hardware form of that limit, and attention is the software form.</p>
+
+    <div class="side">
+      <div class="box">
+        <div class="who">Overt attention</div>
+        <p>Pointing the eyes (and often the head) at something. This is what eye-trackers measure, and it is what the circles and traces in both figures show.</p>
+      </div>
+      <div class="box">
+        <div class="who">Covert attention</div>
+        <p>Attending to a location <em>without</em> moving the eyes, like noticing someone across the room "out of the corner of your eye". Posner (1980) showed that a cue at a location speeds up responses there even when the eyes stay still.</p>
+      </div>
+    </div>
+
+    <p>The two are tightly linked. Just before each saccade, covert attention shifts to the saccade target, and perception at that location improves (Deubel &amp; Schneider, 1996; Kowler et al., 1995). The <b>premotor theory of attention</b> (Rizzolatti et al., 1987) goes further: it claims that shifting attention <em>is</em> preparing an eye movement that may or may not be carried out. Reading gives the clearest everyday example. The perceptual span's rightward reach and the preview benefit (section 3) are covert attention moving on to the next word while the eyes are still fixated on the current one.</p>
+
+    <h3 class="subtitle">What decides where attention goes next?</h3>
+    <div class="grid2x2" role="table" aria-label="Bottom-up versus top-down attention in text and scenes">
+      <div class="hd" role="columnheader"></div>
+      <div class="hd" role="columnheader">Bottom-up (stimulus-driven)</div>
+      <div class="hd" role="columnheader">Top-down (goal-driven)</div>
+      <div class="hd" role="rowheader">What it is</div>
+      <div>Things that stand out grab attention automatically: a bright flash, a sudden movement, a red item among green ones. Formalised as the <b>saliency map</b> (Koch &amp; Ullman, 1985; Itti, Koch &amp; Niebur, 1998).</div>
+      <div>Goals, knowledge and expectations bias selection towards whatever is relevant to the task. Formalised in <b>Guided Search</b> (Wolfe, 1994) and in the "biased competition" account (Desimone &amp; Duncan, 1995).</div>
+      <div class="hd" role="rowheader">In reading</div>
+      <div>Word length and spaces seen in the parafovea decide where the next saccade lands, and short words get skipped.</div>
+      <div>How fast you understand, and what you predict comes next, decide how long you stay on a word and whether you go back.</div>
+      <div class="hd" role="rowheader">In Yarbus</div>
+      <div>High-contrast faces and figures pull gaze in every trace, which is why trace 1 is face-heavy.</div>
+      <div>The question asked reshapes the whole trace: faces for ages, bodies for clothing, the whole room for positions.</div>
+    </div>
+
+    <h3 class="subtitle">Three more facts about attention that eye-tracking revealed</h3>
+    <ul class="plain">
+      <li><b>Inhibition of return.</b> After attention leaves a location, it is briefly slower to come back to it (Posner &amp; Cohen, 1984). This pushes search towards new places, which is why scanpaths do not keep revisiting the same spot.</li>
+      <li><b>Looking is not seeing.</b> In <em>inattentional blindness</em>, about half of viewers counting basketball passes fail to notice a person in a gorilla suit walking through the scene (Simons &amp; Chabris, 1999). In <em>change blindness</em>, large changes go unnoticed across a brief interruption (Rensink, O'Regan &amp; Clark, 1997). Gaze can rest on something that attention never fully processes.</li>
+      <li><b>Features are bound by attention.</b> Treisman's <em>feature integration theory</em> (Treisman &amp; Gelade, 1980) holds that simple features such as colour and orientation are registered in parallel across the visual field, while <em>combining</em> them into an object takes focused attention. The lab below lets you test this on yourself.</li>
+    </ul>
+  </section>
+
+  <!-- ===================================================== -->
+  <section id="search">
+    <div class="kicker"><span class="num">6</span><span class="eyebrow">Try it · visual search lab</span></div>
+    <h2 class="title">Pop-out versus serial search</h2>
+    <p class="lede">Find and click the <b>orange circle</b> as fast as you can. In <b>feature search</b> it is the only orange item, so it differs by a single feature. In <b>conjunction search</b> there are also orange squares and blue circles, so the target is defined only by the <em>combination</em> of colour and shape. The lab runs 24 trials with 6, 12 or 24 items per display and plots your average time against the number of items.</p>
+
+    <div class="search">
+      <div>
+        <div class="search-stage" id="sStage">
+          <svg id="sSvg" viewBox="0 0 400 400" aria-label="Search display"></svg>
+          <div class="msg" id="sMsg"><div><p style="margin:0 auto 0.9rem;max-width:30ch">24 short trials take about a minute. Keep your pointer near the centre between trials.</p><button class="btn primary" id="sStart">Start experiment</button></div></div>
+        </div>
+        <div class="progress" id="sProg">Trial 0 / 24</div>
+      </div>
+      <div>
+        <div class="legend" aria-label="Legend">
+          <span><svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="var(--s1)"/></svg>Feature search</span>
+          <span><svg width="14" height="14" aria-hidden="true"><rect x="2" y="2" width="10" height="10" rx="1" fill="var(--s2)"/></svg>Conjunction search</span>
+        </div>
+        <div class="chart-wrap" id="rtWrap">
+          <svg id="rt" viewBox="0 0 400 300" role="img" aria-label="Your mean response time against number of items, for feature and conjunction search"></svg>
+          <div class="tip" id="rtTip"></div>
+        </div>
+        <table class="mini" id="rtTable" aria-label="Mean response times in milliseconds">
+          <thead><tr><th>Items</th><th>6</th><th>12</th><th>24</th><th>Slope</th></tr></thead>
+          <tbody>
+            <tr><td>Feature</td><td>–</td><td>–</td><td>–</td><td>–</td></tr>
+            <tr><td>Conjunction</td><td>–</td><td>–</td><td>–</td><td>–</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="hint" style="max-width:68ch">What to expect: feature-search times stay roughly <b>flat</b> as items are added (slope near 0 ms per item), because the target "pops out" in parallel. Conjunction-search times usually <b>rise</b> with set size, classically by 20–30 ms per item when the target is present, because attention has to visit items until it binds the right colour to the right shape. Your times also include moving the mouse, which adds a roughly constant amount. Errors (clicks on the wrong item) are counted but not timed.</p>
+  </section>
+
+  <!-- ===================================================== -->
+  <section id="machines">
+    <div class="kicker"><span class="num">7</span><span class="eyebrow">Connections to machine learning</span></div>
+    <h2 class="title">"Attention" in neural networks: borrowed name, different mechanism</h2>
+    <p class="lede">Ideas from human gaze have repeatedly fed into computer vision and machine learning, and "attention" is now a core building block of modern AI. It helps to be precise about what carries over and what does not.</p>
+    <ul class="plain">
+      <li><b>Saliency models</b> predict where people will look. The Itti–Koch model (1998) combines contrast in colour, intensity and orientation. Deep models such as <em>DeepGaze</em> learn the mapping from eye-tracking datasets and are compared on public benchmarks such as MIT/Tübingen Saliency.</li>
+      <li><b>Glimpse models</b> copy the fovea directly. The Recurrent Attention Model (Mnih et al., 2014) looks at a few small high-resolution patches of an image in sequence, and learns <em>where</em> to look next with reinforcement learning, much as a saccade policy would.</li>
+      <li><b>Soft attention</b> in image captioning (Xu et al., 2015, "Show, Attend and Tell") produces a weighting over image regions at each generated word. These heat-maps look strikingly like fixation maps.</li>
+      <li><b>Self-attention in Transformers</b> (Vaswani et al., 2017) lets every token weight every other token. This is the version people usually mean by "attention" today.</li>
+      <li><b>Do models attend where humans look?</b> Often not. Das et al. (2016) collected human attention maps for visual question answering and found that the regions models weighted correlated only weakly with where humans looked. Researchers also use human gaze as a training signal, for example reading-time data in NLP and gaze-guided image models.</li>
+    </ul>
+
+    <div class="table-wrap">
+      <table class="cmp">
+        <thead><tr><th></th><th>Human gaze &amp; attention</th><th>Transformer self-attention</th></tr></thead>
+        <tbody>
+          <tr><td class="label">Why it exists</td><td>A hard limit: only a 2° fovea and limited processing capacity</td><td>A modelling choice: lets the network route information by content</td></tr>
+          <tr><td class="label">How many places at once</td><td>One fixation at a time, plus a limited covert spotlight</td><td>All positions in parallel, with every query attending to every key</td></tr>
+          <tr><td class="label">Cost of looking</td><td>Each saccade costs about 200 ms of planning, and vision is suppressed during it</td><td>No per-glance cost; compute grows as n² with sequence length</td></tr>
+          <tr><td class="label">Order in time</td><td>Sequential: a scanpath through space over time</td><td>Within one layer, no sequence of glances; the weights are computed at once</td></tr>
+          <tr><td class="label">Driven by</td><td>Salience, meaning and task goals together</td><td>Learned query–key similarity, shaped only by the training objective</td></tr>
+          <tr><td class="label">Is the map an explanation?</td><td>Fixations reflect processing, but looking ≠ understanding (inattentional blindness)</td><td>Attention weights are not reliable explanations of a prediction (Jain &amp; Wallace, 2019)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>One practical payoff runs the other way. Because the periphery sees so little detail, VR headsets with eye-tracking use <b>foveated rendering</b>: they draw full detail only where the user is looking and save a large share of GPU work, much as the demo in section 1 blurs everything but the window.</p>
+  </section>
+
+  <!-- ===================================================== -->
+  <section id="takeaways">
+    <div class="kicker"><span class="num">8</span><span class="eyebrow">Synthesis</span></div>
+    <h2 class="title">What gaze tells us about the human visual system</h2>
+    <div class="take">
+      <div class="k"><h3>Vision is sampled, not continuous</h3><p>We see in a series of 200–300 ms snapshots linked by saccades. The smooth, detailed world we experience is built by the brain from those snapshots.</p></div>
+      <div class="k"><h3>Detail is expensive, so it is rationed</h3><p>A tiny high-resolution fovea plus mobile eyes is cheaper than high resolution everywhere. Choosing where to look is how the system spends its budget.</p></div>
+      <div class="k"><h3>Reading is tuned to language</h3><p>Where and how long the eyes stop tracks word length, frequency and predictability. The perceptual span is lopsided in the reading direction, which is a direct signature of attention.</p></div>
+      <div class="k"><h3>The task steers the eyes</h3><p>Yarbus showed that the same image yields different scanpaths for different questions. Vision works as goal-directed questioning of a scene, not as passive recording.</p></div>
+      <div class="k"><h3>Attention leads, eyes follow</h3><p>Covert attention shifts to the next target before each saccade. Reading preview and pre-saccadic enhancement show that the eyes carry out decisions attention has already made.</p></div>
+      <div class="k"><h3>Fixating is not the same as perceiving</h3><p>Inattentional and change blindness show that gaze location is a useful but imperfect index of what is actually processed. The same caution applies to attention maps in neural networks.</p></div>
+    </div>
+  </section>
+
+  <section aria-label="References">
+    <div class="kicker"><span class="num">↳</span><span class="eyebrow">For the curious</span></div>
+    <ul class="refs">
+      <li>Javal, L.É. (1879). Essai sur la physiologie de la lecture. <em>Annales d'Oculistique</em>, 82, 242–253.</li>
+      <li>Huey, E.B. (1908). <em>The Psychology and Pedagogy of Reading.</em> Macmillan.</li>
+      <li>Buswell, G.T. (1935). <em>How People Look at Pictures.</em> University of Chicago Press.</li>
+      <li>Yarbus, A.L. (1967). <em>Eye Movements and Vision.</em> Plenum Press. (Russian original 1965.)</li>
+      <li>Noton, D. &amp; Stark, L. (1971). Scanpaths in eye movements during pattern perception. <em>Science</em>, 171, 308–311.</li>
+      <li>McConkie, G.W. &amp; Rayner, K. (1975). The span of the effective stimulus during a fixation in reading. <em>Perception &amp; Psychophysics</em>, 17, 578–586.</li>
+      <li>McConkie, G.W. &amp; Rayner, K. (1976). Asymmetry of the perceptual span in reading. <em>Bulletin of the Psychonomic Society</em>, 8, 365–368.</li>
+      <li>Ikeda, M. &amp; Saida, S. (1978). Span of recognition in reading. <em>Vision Research</em>, 18, 83–88.</li>
+      <li>Rayner, K. &amp; Bertera, J.H. (1979). Reading without a fovea. <em>Science</em>, 206, 468–469.</li>
+      <li>Rayner, K., Well, A.D., Pollatsek, A. &amp; Bertera, J.H. (1982). The availability of useful information to the right of fixation in reading. <em>Perception &amp; Psychophysics</em>, 31, 537–550.</li>
+      <li>Rayner, K. (1986). Eye movements and the perceptual span in beginning and skilled readers. <em>J. Exp. Child Psychology</em>, 41, 211–236.</li>
+      <li>Henderson, J.M. &amp; Ferreira, F. (1990). Effects of foveal processing difficulty on the perceptual span in reading. <em>J. Exp. Psychology: LMC</em>, 16, 417–429.</li>
+      <li>Pollatsek, A., Raney, G.E., LaGasse, L. &amp; Rayner, K. (1993). The use of information below fixation in reading and in visual search. <em>Canadian J. Exp. Psychology</em>, 47, 179–200.</li>
+      <li>Häikiö, T., Bertram, R., Hyönä, J. &amp; Niemi, P. (2009). Development of the letter identity span in reading. <em>J. Exp. Child Psychology</em>, 102, 167–181.</li>
+      <li>Rayner, K., Castelhano, M.S. &amp; Yang, J. (2009). Eye movements and the perceptual span in older and younger readers. <em>Psychology and Aging</em>, 24, 755–760.</li>
+      <li>Rayner, K. (1975). The perceptual span and peripheral cues in reading. <em>Cognitive Psychology</em>, 7, 65–81.</li>
+      <li>Potter, M.C. (1976). Short-term conceptual memory for pictures. <em>J. Exp. Psychology: Human Learning and Memory</em>, 2, 509–522.</li>
+      <li>Treisman, A. &amp; Gelade, G. (1980). A feature-integration theory of attention. <em>Cognitive Psychology</em>, 12, 97–136.</li>
+      <li>Posner, M.I. (1980). Orienting of attention. <em>Quarterly Journal of Experimental Psychology</em>, 32, 3–25.</li>
+      <li>Pollatsek, A., Bolozky, S., Well, A.D. &amp; Rayner, K. (1981). Asymmetries in the perceptual span for Israeli readers. <em>Brain and Language</em>, 14, 174–180.</li>
+      <li>Posner, M.I. &amp; Cohen, Y. (1984). Components of visual orienting. In <em>Attention and Performance X</em>, 531–556.</li>
+      <li>Koch, C. &amp; Ullman, S. (1985). Shifts in selective visual attention. <em>Human Neurobiology</em>, 4, 219–227.</li>
+      <li>Rizzolatti, G., Riggio, L., Dascola, I. &amp; Umiltà, C. (1987). Reorienting attention across the horizontal and vertical meridians. <em>Neuropsychologia</em>, 25, 31–40.</li>
+      <li>Wolfe, J.M. (1994). Guided Search 2.0. <em>Psychonomic Bulletin &amp; Review</em>, 1, 202–238.</li>
+      <li>Desimone, R. &amp; Duncan, J. (1995). Neural mechanisms of selective visual attention. <em>Annual Review of Neuroscience</em>, 18, 193–222.</li>
+      <li>Kowler, E., Anderson, E., Dosher, B. &amp; Blaser, E. (1995). The role of attention in the programming of saccades. <em>Vision Research</em>, 35, 1897–1916.</li>
+      <li>Deubel, H. &amp; Schneider, W.X. (1996). Saccade target selection and object recognition. <em>Vision Research</em>, 36, 1827–1837.</li>
+      <li>Rensink, R.A., O'Regan, J.K. &amp; Clark, J.J. (1997). To see or not to see. <em>Psychological Science</em>, 8, 368–373.</li>
+      <li>Itti, L., Koch, C. &amp; Niebur, E. (1998). A model of saliency-based visual attention. <em>IEEE TPAMI</em>, 20, 1254–1259.</li>
+      <li>Rayner, K. (1998). Eye movements in reading and information processing: 20 years of research. <em>Psychological Bulletin</em>, 124, 372–422.</li>
+      <li>Reichle, E.D., Pollatsek, A., Fisher, D.L. &amp; Rayner, K. (1998). Toward a model of eye movement control in reading. <em>Psychological Review</em>, 105, 125–157.</li>
+      <li>Inhoff, A.W. &amp; Liu, W. (1998). The perceptual span and oculomotor activity during the reading of Chinese sentences. <em>J. Exp. Psychology: HPP</em>, 24, 20–34.</li>
+      <li>Simons, D.J. &amp; Chabris, C.F. (1999). Gorillas in our midst. <em>Perception</em>, 28, 1059–1074.</li>
+      <li>Engbert, R., Nuthmann, A., Richter, E.M. &amp; Kliegl, R. (2005). SWIFT: A dynamical model of saccade generation during reading. <em>Psychological Review</em>, 112, 777–813.</li>
+      <li>Oliva, A. &amp; Torralba, A. (2006). Building the gist of a scene. <em>Progress in Brain Research</em>, 155, 23–36.</li>
+      <li>Tatler, B.W. (2007). The central fixation bias in scene viewing. <em>Journal of Vision</em>, 7(14):4.</li>
+      <li>Rayner, K. (2009). Eye movements and attention in reading, scene perception, and visual search. <em>QJEP</em>, 62, 1457–1506.</li>
+      <li>DeAngelus, M. &amp; Pelz, J.B. (2009). Top-down control of eye movements: Yarbus revisited. <em>Visual Cognition</em>, 17, 790–811.</li>
+      <li>Cerf, M., Frady, E.P. &amp; Koch, C. (2009). Faces and text attract gaze independent of the task. <em>Journal of Vision</em>, 9(12):10.</li>
+      <li>Greene, M.R., Liu, T. &amp; Wolfe, J.M. (2012). Reconsidering Yarbus. <em>Vision Research</em>, 62, 1–8.</li>
+      <li>Borji, A. &amp; Itti, L. (2014). Defending Yarbus: Eye movements reveal observers' task. <em>Journal of Vision</em>, 14(3):29.</li>
+      <li>Mnih, V., Heess, N., Graves, A. &amp; Kavukcuoglu, K. (2014). Recurrent models of visual attention. <em>NeurIPS</em>.</li>
+      <li>Xu, K. et al. (2015). Show, attend and tell. <em>ICML</em>.</li>
+      <li>Das, A., Agrawal, H., Zitnick, C.L., Parikh, D. &amp; Batra, D. (2016). Human attention in visual question answering. <em>EMNLP</em>.</li>
+      <li>Vaswani, A. et al. (2017). Attention is all you need. <em>NeurIPS</em>.</li>
+      <li>Henderson, J.M. &amp; Hayes, T.R. (2017). Meaning-based guidance of attention in scenes. <em>Nature Human Behaviour</em>, 1, 743–747.</li>
+      <li>Jain, S. &amp; Wallace, B.C. (2019). Attention is not explanation. <em>NAACL</em>.</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+(function () {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+  /* ---------------- acuity chart ---------------- */
+  function drawAcuity() {
+    const svg = $('#acuity');
+    const W = 640, H = 300, L = 52, R = 18, T = 18, B = 44;
+    const xMax = 40, X = e => L + e / xMax * (W - L - R), Y = a => T + (1 - a) * (H - T - B);
+    const acu = e => 1 / (1 + e / 2);
+    let s = '';
+    // bands
+    s += `<rect x="${X(0)}" y="${T}" width="${X(1) - X(0)}" height="${H - T - B}" fill="var(--accent)" opacity="0.16"/>`;
+    s += `<rect x="${X(1)}" y="${T}" width="${X(5) - X(1)}" height="${H - T - B}" fill="var(--accent)" opacity="0.07"/>`;
+    s += `<text x="${X(0.5)}" y="${T + 14}" font-size="10" text-anchor="middle" fill="var(--ink-soft)" font-family="IBM Plex Mono, monospace">fov.</text>`;
+    s += `<text x="${X(3)}" y="${T + 14}" font-size="10" text-anchor="middle" fill="var(--ink-soft)" font-family="IBM Plex Mono, monospace">parafovea</text>`;
+    s += `<text x="${X(22)}" y="${T + 14}" font-size="10" text-anchor="middle" fill="var(--ink-soft)" font-family="IBM Plex Mono, monospace">periphery</text>`;
+    // grid
+    for (const a of [0, 0.25, 0.5, 0.75, 1]) {
+      s += `<line x1="${L}" x2="${W - R}" y1="${Y(a)}" y2="${Y(a)}" stroke="var(--line)" stroke-width="1"/>`;
+      s += `<text x="${L - 8}" y="${Y(a) + 4}" font-size="10" text-anchor="end" fill="var(--muted)" font-family="IBM Plex Mono, monospace">${a.toFixed(2)}</text>`;
+    }
+    for (const e of [0, 5, 10, 20, 30, 40]) s += `<text x="${X(e)}" y="${H - B + 16}" font-size="10" text-anchor="middle" fill="var(--muted)" font-family="IBM Plex Mono, monospace">${e}°</text>`;
+    s += `<text x="${(L + W - R) / 2}" y="${H - 6}" font-size="11" text-anchor="middle" fill="var(--ink-soft)" font-family="Work Sans, sans-serif">Eccentricity from the centre of gaze (degrees)</text>`;
+    s += `<text transform="translate(13 ${(T + H - B) / 2}) rotate(-90)" font-size="11" text-anchor="middle" fill="var(--ink-soft)" font-family="Work Sans, sans-serif">Relative acuity</text>`;
+    let d = '';
+    for (let e = 0; e <= xMax; e += 0.25) d += (e ? 'L' : 'M') + X(e).toFixed(1) + ' ' + Y(acu(e)).toFixed(1);
+    s += `<path d="${d}" fill="none" stroke="var(--accent)" stroke-width="2"/>`;
+    s += `<text x="${X(8) + 8}" y="${Y(acu(8)) - 8}" font-size="10" fill="var(--ink-soft)" font-family="IBM Plex Mono, monospace">≈ 0.2 at 8°</text>`;
+    s += `<line id="acX" x1="0" x2="0" y1="${T}" y2="${H - B}" stroke="var(--line-strong)" stroke-dasharray="3 3" opacity="0"/>`;
+    s += `<circle id="acDot" r="4.5" fill="var(--accent)" stroke="var(--surface)" stroke-width="2" opacity="0"/>`;
+    s += `<rect id="acHit" x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}" fill="transparent"/>`;
+    svg.innerHTML = s;
+    const tip = $('#acuityTip'), wrap = $('#acuityWrap');
+    const hit = $('#acHit');
+    const move = ev => {
+      const r = svg.getBoundingClientRect();
+      const sx = (ev.clientX - r.left) / r.width * W;
+      const e = Math.max(0, Math.min(xMax, (sx - L) / (W - L - R) * xMax));
+      const a = acu(e);
+      $('#acX').setAttribute('x1', X(e)); $('#acX').setAttribute('x2', X(e)); $('#acX').setAttribute('opacity', 1);
+      $('#acDot').setAttribute('cx', X(e)); $('#acDot').setAttribute('cy', Y(a)); $('#acDot').setAttribute('opacity', 1);
+      tip.textContent = `${e.toFixed(1)}° · acuity ${a.toFixed(2)} · ≈${Math.round(e * 3.5)} letters away`;
+      tip.style.left = (X(e) / W * r.width) + 'px'; tip.style.top = (Y(a) / H * r.height) + 'px';
+      tip.classList.add('on');
+    };
+    hit.addEventListener('pointermove', move);
+    hit.addEventListener('pointerleave', () => { tip.classList.remove('on'); $('#acX').setAttribute('opacity', 0); $('#acDot').setAttribute('opacity', 0); });
+  }
+  drawAcuity();
+
+  /* ---------------- perceptual span diagram ---------------- */
+  (function () {
+    const S = 'the man was reading a long book about birds', F = 12; // fixate the r of "reading"
+    const cls = j => j === F ? 'fix' : (j >= F - 4 && j < F) ? 'left' : (j > F && j <= F + 8) ? 'id' : (j > F + 8 && j <= F + 15) ? 'feat' : '';
+    const ch = c => c === ' ' ? '&nbsp;' : c;
+    const col = (a, b) => `grid-column:${a + 1} / ${b + 2}`;
+    let h = '<div class="ps-grid">';
+    h += '<div class="rowlab" style="grid-row:1;margin-top:0">What the reader can use in one fixation</div>';
+    h += `<div class="eye" style="${col(F, F)};grid-row:2;align-self:end">▼</div><div class="lab nw" style="grid-column:${F + 2} / span 20;text-align:left;grid-row:2">eyes fixate here</div>`;
+    for (let j = 0; j < S.length; j++) h += `<div class="c ${cls(j)}" style="grid-row:3">${ch(S[j])}</div>`;
+    h += `<div class="br l" style="${col(F - 4, F - 1)};grid-row:4"></div><div class="br i" style="${col(F + 1, F + 8)};grid-row:4"></div><div class="br" style="${col(F + 1, F + 15)};grid-row:6"></div>`;
+    h += `<div class="lab" style="${col(F - 7, F - 1)};grid-row:5">3–4 left</div><div class="lab nw" style="${col(F + 1, F + 25)};grid-row:5;text-align:left">identify words · <span class="nw">7–8</span></div>`;
+    h += `<div style="${col(F + 1, F + 30)};grid-row:7;text-align:left" class="lab wrapok">letter shapes &amp; word lengths · <span class="nw">to 14–15</span></div>`;
+    h += '<div class="rowlab" style="grid-row:8">What the moving-window display shows at that moment</div>';
+    for (let j = 0; j < S.length; j++) { const inside = j >= F - 4 && j <= F + 15; h += `<div class="c ${inside ? cls(j) : 'x'}" style="grid-row:9">${inside ? ch(S[j]) : (S[j] === ' ' ? '&nbsp;' : 'x')}</div>`; }
+    h += '</div>';
+    document.getElementById('psDiagram').innerHTML = h;
+  })();
+
+  /* ---------------- foveation demo ---------------- */
+  const stage = $('#foveaStage'), trail = $('#foveaTrail');
+  let fx = 0.5, fy = 0.35, recording = true, fixes = [], dwellT = null, lastPos = null;
+  function setFov(xf, yf) {
+    fx = Math.max(0, Math.min(1, xf)); fy = Math.max(0, Math.min(1, yf));
+    stage.style.setProperty('--x', (fx * 100) + '%'); stage.style.setProperty('--y', (fy * 100) + '%');
+    if (!recording) return;
+    clearTimeout(dwellT);
+    const here = [fx, fy];
+    dwellT = setTimeout(() => {
+      const prev = fixes[fixes.length - 1];
+      if (prev && Math.hypot(prev[0] - here[0], prev[1] - here[1]) < 0.025) { prev[2] += 1; } else fixes.push([here[0], here[1], 1]);
+      if (fixes.length > 60) fixes.shift();
+      drawTrail();
+    }, 150);
+  }
+  function drawTrail() {
+    let s = '';
+    if (fixes.length > 1) s += `<polyline points="${fixes.map(f => `${f[0] * 552},${f[1] * 506}`).join(' ')}" fill="none" stroke="#E0249A" stroke-width="2" opacity="0.85"/>`;
+    fixes.forEach((f, i) => s += `<circle cx="${f[0] * 552}" cy="${f[1] * 506}" r="${Math.min(22, 9 + 3 * f[2])}" fill="#E0249A" fill-opacity="0.22" stroke="#E0249A" stroke-width="2"/><text x="${f[0] * 552}" y="${f[1] * 506 + 4}" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" fill="#fff" stroke="#7a0d50" stroke-width="2.5" paint-order="stroke">${i + 1}</text>`);
+    trail.innerHTML = s;
+  }
+  stage.addEventListener('pointermove', e => { const r = stage.getBoundingClientRect(); setFov((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height); });
+  stage.addEventListener('pointerdown', e => { const r = stage.getBoundingClientRect(); setFov((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height); });
+  stage.addEventListener('keydown', e => {
+    const k = { ArrowLeft: [-0.04, 0], ArrowRight: [0.04, 0], ArrowUp: [0, -0.04], ArrowDown: [0, 0.04] }[e.key];
+    if (k) { e.preventDefault(); setFov(fx + k[0], fy + k[1]); }
+  });
+  const fovR = $('#fovR'), fovB = $('#fovB');
+  const updR = () => { stage.style.setProperty('--r', fovR.value + 'px'); $('#fovRv').textContent = fovR.value + ' px'; };
+  const updB = () => { stage.style.setProperty('--blur', fovB.value + 'px'); $('#fovBv').textContent = fovB.value + ' px'; };
+  fovR.addEventListener('input', updR); fovB.addEventListener('input', updB); updR(); updB(); setFov(fx, fy);
+  $('#fovOff').addEventListener('click', e => { const on = e.currentTarget.getAttribute('aria-pressed') !== 'true'; e.currentTarget.setAttribute('aria-pressed', on); stage.classList.toggle('off', on); });
+  $('#fovTrail').addEventListener('click', e => { recording = e.currentTarget.getAttribute('aria-pressed') !== 'true'; e.currentTarget.setAttribute('aria-pressed', recording); if (!recording) clearTimeout(dwellT); });
+  $('#fovClear').addEventListener('click', () => { fixes = []; drawTrail(); });
+
+  /* ---------------- moving window ---------------- */
+  const TEXT = "When we read, our eyes do not glide smoothly along the line. They jump from word to word in quick saccades and pause for about a quarter of a second on each fixation. Short and predictable words are often skipped, long words may be fixated twice, and now and then the eyes jump back to check something they missed. During each pause the reader takes in only a small window of letters, most of it to the right of the point of fixation, because that is where the next words will come from.";
+  const mw = $('#mw');
+  let lines = [], gLine = 0, gCol = 2, spanL = 4, spanR = 14, keepSpaces = true, charW = 9;
+  function measure() {
+    const m = document.createElement('span'); m.className = 'mw-measure'; m.style.fontSize = getComputedStyle(mw).fontSize; m.textContent = 'x'.repeat(50);
+    document.body.appendChild(m); charW = m.getBoundingClientRect().width / 50; m.remove();
+  }
+  function layout() {
+    measure();
+    const inner = mw.clientWidth - parseFloat(getComputedStyle(mw).paddingLeft) - parseFloat(getComputedStyle(mw).paddingRight);
+    const cols = Math.max(20, Math.floor(inner / charW) - 1);
+    lines = []; let cur = '';
+    for (const w of TEXT.split(' ')) { if ((cur + (cur ? ' ' : '') + w).length > cols) { lines.push(cur); cur = w; } else cur += (cur ? ' ' : '') + w; }
+    if (cur) lines.push(cur);
+    gLine = Math.min(gLine, lines.length - 1);
+    render();
+  }
+  const esc = c => c === '<' ? '&lt;' : c === '>' ? '&gt;' : c === '&' ? '&amp;' : c;
+  function maskChar(c) { if (c === ' ') return keepSpaces ? ' ' : 'x'; return /[A-Za-z]/.test(c) ? 'x' : (keepSpaces ? c : 'x'); }
+  function render() {
+    mw.innerHTML = lines.map((ln, i) => {
+      let h = '';
+      for (let j = 0; j < ln.length; j++) {
+        const vis = i === gLine && j >= gCol - spanL && j <= gCol + spanR;
+        const ch = vis ? esc(ln[j]) : maskChar(ln[j]);
+        if (i === gLine && j === gCol) h += `<span class="fx vis">${ch}</span>`;
+        else h += vis ? `<span class="vis">${ch}</span>` : `<span class="mask">${ch}</span>`;
+      }
+      return `<div class="ln">${h}</div>`;
+    }).join('');
+  }
+  mw.addEventListener('pointermove', e => {
+    const lnEls = $$('.ln', mw); if (!lnEls.length) return;
+    const r0 = lnEls[0].getBoundingClientRect();
+    const li = Math.max(0, Math.min(lines.length - 1, Math.floor((e.clientY - r0.top) / r0.height)));
+    const col = Math.max(0, Math.min(lines[li].length - 1, Math.floor((e.clientX - r0.left) / charW)));
+    if (li !== gLine || col !== gCol) { gLine = li; gCol = col; render(); }
+  });
+  mw.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') { gCol++; if (gCol >= lines[gLine].length) { gLine = (gLine + 1) % lines.length; gCol = 0; } }
+    else if (e.key === 'ArrowLeft') { gCol--; if (gCol < 0) { gLine = (gLine - 1 + lines.length) % lines.length; gCol = lines[gLine].length - 1; } }
+    else if (e.key === 'ArrowDown') { gLine = Math.min(lines.length - 1, gLine + 1); gCol = Math.min(gCol, lines[gLine].length - 1); }
+    else if (e.key === 'ArrowUp') { gLine = Math.max(0, gLine - 1); gCol = Math.min(gCol, lines[gLine].length - 1); }
+    else return;
+    e.preventDefault(); render();
+  });
+  const mwL = $('#mwL'), mwR = $('#mwR');
+  const presetBtns = $$('[data-mw]');
+  function setSpan(l, r, fromPreset) {
+    spanL = l; spanR = r; mwL.value = l; mwR.value = r; $('#mwLv').textContent = l; $('#mwRv').textContent = r;
+    presetBtns.forEach(b => b.setAttribute('aria-pressed', b.dataset.mw === `${l},${r}`));
+    render();
+  }
+  mwL.addEventListener('input', () => setSpan(+mwL.value, +mwR.value));
+  mwR.addEventListener('input', () => setSpan(+mwL.value, +mwR.value));
+  presetBtns.forEach(b => b.addEventListener('click', () => { const [l, r] = b.dataset.mw.split(',').map(Number); setSpan(l, r); }));
+  $('#mwSpaces').addEventListener('click', e => { keepSpaces = e.currentTarget.getAttribute('aria-pressed') !== 'true'; e.currentTarget.setAttribute('aria-pressed', keepSpaces); render(); });
+  let rto, lastW = 0; new ResizeObserver(() => { if (mw.clientWidth === lastW) return; lastW = mw.clientWidth; clearTimeout(rto); rto = setTimeout(layout, 80); }).observe(mw);
+  layout();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
+
+  /* ---------------- visual search lab ---------------- */
+  const SIZES = [6, 12, 24], REPS = 4;
+  const sSvg = $('#sSvg'), sMsg = $('#sMsg'), sProg = $('#sProg');
+  const BLUE = '#2F6DB5', ORANGE = '#E07A1F';
+  let trials = [], ti = 0, t0 = 0, results = [], errors = 0, live = false;
+  function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  function start() {
+    trials = []; results = []; errors = 0; ti = 0;
+    for (const c of ['feature', 'conj']) for (const n of SIZES) for (let k = 0; k < REPS; k++) trials.push({ c, n });
+    shuffle(trials); drawRT(); next();
+  }
+  function shape(x, y, col, sq, isT) {
+    const r = 11;
+    const attrs = `fill="${col}" data-t="${isT ? 1 : 0}" style="cursor:pointer"`;
+    const hit = `<circle cx="${x}" cy="${y}" r="20" fill="transparent" data-t="${isT ? 1 : 0}" style="cursor:pointer"/>`;
+    return (sq ? `<rect x="${x - r}" y="${y - r}" width="${2 * r}" height="${2 * r}" rx="2" ${attrs}/>` : `<circle cx="${x}" cy="${y}" r="${r}" ${attrs}/>`) + hit;
+  }
+  function next() {
+    if (ti >= trials.length) { finish(); return; }
+    live = false; sMsg.hidden = true;
+    sSvg.innerHTML = `<g stroke="var(--ink)" stroke-width="2"><line x1="192" x2="208" y1="200" y2="200"/><line x1="200" x2="200" y1="192" y2="208"/></g>`;
+    sProg.textContent = `Trial ${ti + 1} / ${trials.length}` + (errors ? ` · ${errors} error${errors > 1 ? 's' : ''}` : '');
+    setTimeout(() => {
+      const { c, n } = trials[ti];
+      const cells = shuffle([...Array(36).keys()]).slice(0, n);
+      let s = '';
+      cells.forEach((cell, i) => {
+        const gx = cell % 6, gy = Math.floor(cell / 6);
+        const x = 40 + gx * 64 + (Math.random() * 22 - 11), y = 40 + gy * 64 + (Math.random() * 22 - 11);
+        if (i === 0) s += shape(x, y, ORANGE, false, true);
+        else if (c === 'feature') s += shape(x, y, BLUE, Math.random() < 0.5, false);
+        else s += i % 2 ? shape(x, y, BLUE, false, false) : shape(x, y, ORANGE, true, false);
+      });
+      sSvg.innerHTML = s; t0 = performance.now(); live = true;
+    }, 550 + Math.random() * 300);
+  }
+  sSvg.addEventListener('pointerdown', e => {
+    if (!live) return;
+    const t = e.target.closest('[data-t]'); if (!t) return;
+    if (t.dataset.t === '1') {
+      live = false;
+      results.push({ ...trials[ti], rt: performance.now() - t0 });
+      ti++; drawRT(); next();
+    } else {
+      errors++; sProg.textContent = `Trial ${ti + 1} / ${trials.length} · ${errors} error${errors > 1 ? 's' : ''}`;
+      sSvg.style.outline = '2px solid var(--err)'; setTimeout(() => sSvg.style.outline = '', 180);
+    }
+  });
+  function finish() {
+    sSvg.innerHTML = ''; sMsg.hidden = false;
+    const f = slope('feature'), c = slope('conj');
+    sMsg.innerHTML = `<div><p style="margin:0 auto 0.8rem;max-width:32ch">Done. Feature slope <b>${f == null ? '–' : f.toFixed(1)}</b> ms/item, conjunction slope <b>${c == null ? '–' : c.toFixed(1)}</b> ms/item.</p><button class="btn primary" id="sAgain">Run again</button></div>`;
+    $('#sAgain').addEventListener('click', start);
+    sProg.textContent = `Finished · ${errors} error${errors === 1 ? '' : 's'}`;
+  }
+  $('#sStart').addEventListener('click', start);
+  function means(c) { return SIZES.map(n => { const v = results.filter(r => r.c === c && r.n === n).map(r => r.rt); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; }); }
+  function slope(c) {
+    const pts = SIZES.map((n, i) => [n, means(c)[i]]).filter(p => p[1] != null); if (pts.length < 2) return null;
+    const mx = pts.reduce((a, p) => a + p[0], 0) / pts.length, my = pts.reduce((a, p) => a + p[1], 0) / pts.length;
+    return pts.reduce((a, p) => a + (p[0] - mx) * (p[1] - my), 0) / pts.reduce((a, p) => a + (p[0] - mx) ** 2, 0);
+  }
+  function drawRT() {
+    const W = 400, H = 300, L = 54, R = 16, T = 16, B = 44;
+    const series = [{ k: 'feature', name: 'Feature', col: 'var(--s1)', sq: false }, { k: 'conj', name: 'Conjunction', col: 'var(--s2)', sq: true }];
+    const all = series.flatMap(s => means(s.k)).filter(v => v != null);
+    const yMax = Math.max(1200, Math.ceil((Math.max(0, ...all) * 1.1) / 200) * 200);
+    const X = n => L + (n / 24) * (W - L - R) * 0.92 + 10, Y = v => T + (1 - v / yMax) * (H - T - B);
+    let s = '';
+    for (let v = 0; v <= yMax; v += yMax / 4) {
+      s += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/>`;
+      s += `<text x="${L - 7}" y="${Y(v) + 4}" font-size="10" text-anchor="end" fill="var(--muted)" font-family="IBM Plex Mono, monospace">${Math.round(v)}</text>`;
+    }
+    for (const n of SIZES) s += `<text x="${X(n)}" y="${H - B + 16}" font-size="10" text-anchor="middle" fill="var(--muted)" font-family="IBM Plex Mono, monospace">${n}</text>`;
+    s += `<text x="${(L + W - R) / 2}" y="${H - 6}" font-size="11" text-anchor="middle" fill="var(--ink-soft)" font-family="Work Sans, sans-serif">Number of items on screen</text>`;
+    s += `<text transform="translate(13 ${(T + H - B) / 2}) rotate(-90)" font-size="11" text-anchor="middle" fill="var(--ink-soft)" font-family="Work Sans, sans-serif">Mean time to click (ms)</text>`;
+    if (!all.length) s += `<text x="${(L + W - R) / 2}" y="${(T + H - B) / 2}" font-size="11" text-anchor="middle" fill="var(--muted)" font-family="IBM Plex Mono, monospace">Your results will appear here</text>`;
+    const marks = [];
+    for (const se of series) {
+      const m = means(se.k), pts = SIZES.map((n, i) => [n, m[i]]).filter(p => p[1] != null);
+      if (pts.length > 1) s += `<polyline points="${pts.map(p => `${X(p[0])},${Y(p[1])}`).join(' ')}" fill="none" stroke="${se.col}" stroke-width="2"/>`;
+      for (const [n, v] of pts) {
+        s += se.sq ? `<rect x="${X(n) - 5}" y="${Y(v) - 5}" width="10" height="10" rx="1" fill="${se.col}" stroke="var(--surface)" stroke-width="2"/>` : `<circle cx="${X(n)}" cy="${Y(v)}" r="5.5" fill="${se.col}" stroke="var(--surface)" stroke-width="2"/>`;
+        marks.push({ x: X(n), y: Y(v), label: `${se.name} · ${n} items · ${Math.round(v)} ms` });
+      }
+      if (pts.length) { const [n, v] = pts[pts.length - 1]; s += `<text x="${X(n) - 9}" y="${Y(v) + (se.sq ? -10 : 18)}" font-size="10" text-anchor="end" fill="var(--ink-soft)" font-family="IBM Plex Mono, monospace">${se.name}</text>`; }
+    }
+    marks.forEach((mk, i) => s += `<circle cx="${mk.x}" cy="${mk.y}" r="14" fill="transparent" data-i="${i}"/>`);
+    const svg = $('#rt'); svg.innerHTML = s;
+    const tip = $('#rtTip');
+    svg.querySelectorAll('[data-i]').forEach(c => {
+      c.addEventListener('pointerenter', () => { const mk = marks[c.dataset.i], r = svg.getBoundingClientRect(); tip.textContent = mk.label; tip.style.left = (mk.x / W * r.width) + 'px'; tip.style.top = (mk.y / H * r.height) + 'px'; tip.classList.add('on'); });
+      c.addEventListener('pointerleave', () => tip.classList.remove('on'));
+    });
+    const rows = $$('#rtTable tbody tr');
+    series.forEach((se, i) => {
+      const m = means(se.k), sl = slope(se.k);
+      rows[i].innerHTML = `<td>${se.name}</td>` + m.map(v => `<td>${v == null ? '–' : Math.round(v)}</td>`).join('') + `<td>${sl == null ? '–' : sl.toFixed(1) + ' ms/item'}</td>`;
+    });
+  }
+  drawRT();
+})();
+</script>
+
+<!--ai:foot--><footer class="ai-foot"><a href="../index.html">Vision and Image Processing</a> &middot; Instructor: <a href="https://spinlabiitg.github.io/" target="_blank" rel="noopener">Neeraj Kumar Sharma</a>, IIT Guwahati &middot; <a href="../index.html#credits">data credits</a><span class="ai-lic">Text, figures and audio: <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener license">CC BY-NC 4.0</a> &middot; code: MIT</span></footer><!--/ai:foot-->
+</body>
+</html>

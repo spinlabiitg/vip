@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The 2-D Fourier Transform</title>
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+<script defer src="../assets/katex/katex.min.js"></script>
+<script defer src="../assets/katex/contrib/auto-render.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #F1F3F0; --surface: #FCFDFB; --surface-2: #E9EDE8;
+    --ink: #161D1A; --ink-soft: #35413C; --muted: #5E6C66;
+    --line: #CCD6D0; --line-strong: #9EB0A8;
+    --acc: #1B7A8A;      /* wave vector, chosen things */
+    --acc2: #B8691A;     /* highlights, conjugate partner */
+    --acc3: #6A4C9A;     /* projections, third component */
+    --good: #2E7D4F; --bad: #B23A3A;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0C1110; --surface: #121A18; --surface-2: #19231F;
+      --ink: #E8F0EC; --ink-soft: #C4D2CB; --muted: #869A91;
+      --line: #25332D; --line-strong: #3A4C44;
+      --acc: #4FD2E2; --acc2: #F0A94E; --acc3: #B497EA;
+      --good: #6CCB8F; --bad: #F08080;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0C1110; --surface: #121A18; --surface-2: #19231F;
+    --ink: #E8F0EC; --ink-soft: #C4D2CB; --muted: #869A91;
+    --line: #25332D; --line-strong: #3A4C44;
+    --acc: #4FD2E2; --acc2: #F0A94E; --acc3: #B497EA;
+    --good: #6CCB8F; --bad: #F08080;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 96px; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink-soft);
+    font-family: "Archivo", ui-sans-serif, system-ui, sans-serif; font-size: 17px; line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--acc); }
+  h1, h2, h3 { font-family: "Instrument Serif", ui-serif, Georgia, serif; font-weight: 400; color: var(--ink); margin: 0; text-wrap: balance; }
+  h1 { font-size: clamp(2.3rem, 6vw, 3.9rem); line-height: 1.05; }
+  h2 { font-size: clamp(1.8rem, 4vw, 2.5rem); line-height: 1.15; margin-bottom: 0.6rem; }
+  h3 { font-size: 1.45rem; margin: 1.6rem 0 0.4rem; }
+  .mono, code { font-family: "JetBrains Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  code { font-size: 0.86em; background: var(--surface-2); padding: 0.05em 0.35em; border-radius: 4px; }
+  .eyebrow { font-family: "JetBrains Mono", monospace; font-size: 0.72rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--acc2); font-weight: 500; }
+
+  .topbar {
+    position: relative; display: flex; align-items: center; gap: 1rem;
+    padding: 0.6rem clamp(1rem, 4vw, 2.4rem); background: color-mix(in srgb, var(--surface) 92%, transparent);
+    backdrop-filter: blur(6px); border-bottom: 1px solid var(--line);
+  }
+  .topbar .brand { font-family: "JetBrains Mono", monospace; font-size: 0.75rem; color: var(--ink); white-space: nowrap; }
+  .topbar nav { display: flex; gap: 0.9rem; overflow-x: auto; flex: 1; scrollbar-width: none; }
+  .topbar nav a { font-family: "JetBrains Mono", monospace; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); text-decoration: none; white-space: nowrap; }
+  .topbar nav a:hover { color: var(--acc); }
+  .themebtn { background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 6px; font: 500 0.7rem "JetBrains Mono", monospace; padding: 0.25rem 0.5rem; cursor: pointer; }
+
+  main { max-width: 1060px; margin: 0 auto; padding: 0 16px 5rem; }
+  .prose { max-width: 760px; }
+  section { padding-top: 3.2rem; }
+  .hero { padding-top: 3.5rem; }
+  .lede { font-size: 1.15rem; color: var(--ink-soft); max-width: 720px; }
+  .roadmap { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.5rem; margin: 1.6rem 0 0; padding: 0; list-style: none; counter-reset: r; }
+  .roadmap li { counter-increment: r; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 0.55rem 0.75rem; font-size: 0.92rem; }
+  .roadmap li::before { content: counter(r, decimal-leading-zero); font-family: "JetBrains Mono", monospace; color: var(--acc2); margin-right: 0.5rem; font-size: 0.75rem; }
+  .roadmap a { color: var(--ink); text-decoration: none; }
+  .secnum { font-family: "JetBrains Mono", monospace; font-size: 0.8rem; color: var(--acc2); display: block; margin-bottom: 0.2rem; }
+
+  .demo { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 1rem clamp(0.8rem, 2vw, 1.3rem) 1.1rem; margin: 1.4rem 0; }
+  .demo > .dhead { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: baseline; margin-bottom: 0.7rem; }
+  .demo > .dhead b { font-family: "JetBrains Mono", monospace; font-size: 0.74rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--acc); font-weight: 600; }
+  .demo > .dhead span { font-size: 0.92rem; color: var(--muted); }
+  .controls { display: flex; flex-wrap: wrap; gap: 0.6rem 1.4rem; align-items: center; margin-bottom: 0.9rem; }
+  .ctl { display: flex; align-items: center; gap: 0.5rem; font-size: 0.86rem; }
+  .ctl label { font-family: "JetBrains Mono", monospace; font-size: 0.78rem; color: var(--ink); white-space: nowrap; }
+  .ctl output { font-family: "JetBrains Mono", monospace; font-size: 0.78rem; color: var(--acc); min-width: 3.4em; }
+  input[type=range] { width: 140px; accent-color: var(--acc); }
+  select, .btn { font: 500 0.78rem "JetBrains Mono", monospace; background: var(--surface-2); color: var(--ink); border: 1px solid var(--line-strong); border-radius: 6px; padding: 0.3rem 0.6rem; cursor: pointer; }
+  .btn:hover { border-color: var(--acc); color: var(--acc); }
+  .btn.on { background: var(--acc); color: var(--surface); border-color: var(--acc); }
+  .chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+  .panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.9rem; }
+  .panels.two { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); max-width: 760px; }
+  .panels.four { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+  .panel { margin: 0; min-width: 0; }
+  .panel figcaption { font-size: 0.82rem; color: var(--muted); margin-top: 0.35rem; line-height: 1.4; }
+  .stack { position: relative; aspect-ratio: 1; background: #000; border-radius: 6px; overflow: hidden; }
+  .stack canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .stack canvas.ov { pointer-events: none; }
+  .stack.drag { cursor: crosshair; touch-action: none; }
+  canvas.px { image-rendering: pixelated; }
+  canvas.plot { width: 100%; height: 170px; display: block; }
+  .strip { width: 100%; height: 26px; image-rendering: pixelated; display: block; border-radius: 4px; }
+  .readout { display: flex; flex-wrap: wrap; gap: 0.3rem 1.2rem; margin-top: 0.8rem; font-family: "JetBrains Mono", monospace; font-size: 0.8rem; color: var(--ink); }
+  .readout span i { color: var(--muted); font-style: normal; }
+  .note { font-size: 0.88rem; color: var(--muted); margin: 0.7rem 0 0; }
+
+  .callout { border-left: 3px solid var(--acc2); background: var(--surface); padding: 0.7rem 1rem; border-radius: 0 8px 8px 0; margin: 1.2rem 0; }
+  .callout.key { border-color: var(--acc); }
+  .callout p { margin: 0.3rem 0; }
+  .katex-display { overflow-x: auto; overflow-y: hidden; padding: 0.2rem 0; }
+  .katex { font-size: 1.06em; }
+
+  .cmp { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin: 1rem 0; }
+  .cmp th, .cmp td { border-bottom: 1px solid var(--line); padding: 0.45rem 0.5rem; text-align: left; vertical-align: top; }
+  .cmp th { font-family: "JetBrains Mono", monospace; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 500; }
+  .tablewrap { overflow-x: auto; }
+
+  .drop { display: flex; align-items: center; justify-content: center; min-height: 84px; margin-bottom: 0.9rem; border: 2px dashed var(--line-strong); border-radius: 10px; background: var(--surface-2); color: var(--muted); text-align: center; padding: 0.8rem; cursor: pointer; font-size: 0.92rem; }
+  .drop strong { color: var(--ink); }
+  .drop.over { border-color: var(--acc); color: var(--acc); }
+  .drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  details.think { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 0.6rem 1rem; margin: 0.7rem 0; }
+  details.think summary { cursor: pointer; color: var(--ink); font-weight: 500; }
+  details.think summary::marker { color: var(--acc2); }
+  details.think[open] summary { margin-bottom: 0.4rem; }
+  details.think p { margin: 0.4rem 0 0.2rem; }
+  .quiz .q { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 0.8rem 1rem; margin: 0.8rem 0; }
+  .quiz .q p { margin: 0 0 0.5rem; color: var(--ink); }
+  .quiz .opts { display: flex; flex-direction: column; gap: 0.35rem; }
+  .quiz button.opt { text-align: left; background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 0.4rem 0.6rem; color: var(--ink-soft); font: inherit; font-size: 0.92rem; cursor: pointer; }
+  .quiz button.opt.right { border-color: var(--good); color: var(--good); }
+  .quiz button.opt.wrong { border-color: var(--bad); color: var(--bad); }
+  .quiz .why { display: none; font-size: 0.88rem; margin-top: 0.5rem; color: var(--muted); }
+  .quiz .q.done .why { display: block; }
+  footer { border-top: 1px solid var(--line); margin-top: 4rem; padding: 1.2rem 16px; font-size: 0.82rem; color: var(--muted); text-align: center; }
+  @media (max-width: 560px) { input[type=range] { width: 110px; } body { font-size: 16px; } }
+</style>
+<!--ai:head--><link rel="stylesheet" href="../assets/site.css?v=592b11fb"><!--/ai:head-->
+</head>
+<body>
+<!--ai:nav--><nav class="ai-nav" aria-label="Course navigation"><div class="ai-nav-in"><a class="ai-brand" href="../index.html" title="Vision and Image Processing"><span class="ai-logo" aria-hidden="true">▦</span><span class="ai-brand-full">Vision and Image Processing</span><span class="ai-brand-short">VIP</span></a><span class="ai-where">Module 1 &middot; Images as sums of gratings: the 2-D Fourier transform</span><details class="ai-menu"><summary>All pages</summary><ul><li><a href="index.html" aria-current="page">1. The 2-D Fourier transform, built from the ground up</a></li><li><a href="../gaze/index.html">2. Where the eyes go: how people scan text and scenes</a></li></ul></details><span class="ai-step ai-prev ai-off">← prev</span><a class="ai-step ai-next" href="../gaze/index.html" title="Where the eyes go: how people scan text and scenes">next →</a></div></nav><!--/ai:nav-->
+<header class="topbar">
+  <span class="brand">On this page</span>
+  <nav>
+    <a href="#s1">1-D recap</a><a href="#s2">Grating</a><a href="#s3">Freq. plane</a><a href="#s4">Slices</a>
+    <a href="#s5">Rows→cols</a><a href="#s6">Adding</a><a href="#s7">The DFT</a><a href="#s8">Build a photo</a>
+    <a href="#s9">Reading spectra</a><a href="#s10">Phase</a><a href="#s11">Filtering</a><a href="#s12">Your image</a><a href="#s13">Quiz</a>
+  </nav>
+  <button class="themebtn" id="themebtn" type="button">theme</button>
+</header>
+
+<main>
+<section class="hero">
+  <div class="eyebrow">Module 1 · Tutorial</div>
+  <h1>The 2-D Fourier transform, built from the ground up</h1>
+  <p class="lede">You already know that a sound can be written as a sum of sinusoids. This page shows that a picture can too.
+  The only new idea is that a sinusoid on a plane has a <em>direction</em> as well as a frequency. Everything else follows from that.</p>
+  <ol class="roadmap">
+    <li><a href="#s1">A 1-D sinusoid, seen as brightness</a></li>
+    <li><a href="#s2">One 2-D sinusoid: the grating</a></li>
+    <li><a href="#s3">The frequency plane: a map of all gratings</a></li>
+    <li><a href="#s4">Walk across a grating: back to 1-D</a></li>
+    <li><a href="#s5">2-D DFT = 1-D DFTs on rows, then columns</a></li>
+    <li><a href="#s6">Adding gratings</a></li>
+    <li><a href="#s7">The 2-D DFT, formally</a></li>
+    <li><a href="#s8">Build a photo, one grating at a time</a></li>
+    <li><a href="#s9">Reading a 2-D spectrum</a></li>
+    <li><a href="#s10">Magnitude or phase: which matters?</a></li>
+    <li><a href="#s11">Filtering in the frequency plane</a></li>
+    <li><a href="#s12">Your own image: magnitude and phase</a></li>
+    <li><a href="#s13">Summary and quiz</a></li>
+  </ol>
+  <p class="note">Every picture on this page is computed live in your browser with a fast Fourier transform. Nothing is pre-drawn. Move the sliders.</p>
+</section>
+
+<!-- ============ 1 ============ -->
+<section id="s1" class="prose-wide">
+  <div class="prose">
+  <span class="secnum">01</span>
+  <h2>Start in 1-D: a sinusoid, seen as brightness</h2>
+  <p>Take \(N\) samples of a cosine that completes \(k\) cycles across them:</p>
+  \[ x[n] = \cos\!\left(\frac{2\pi k n}{N} + \phi\right), \qquad n = 0,1,\dots,N-1. \]
+  <p>The discrete Fourier transform (DFT) measures how much of each frequency is present:</p>
+  \[ X[k'] = \sum_{n=0}^{N-1} x[n]\, e^{-j 2\pi k' n / N}. \]
+  <p>A single cosine gives <strong>two</strong> spikes, at \(k' = +k\) and \(k' = -k\). Euler's formula says why: a cosine is the sum of two complex exponentials that spin in opposite directions,</p>
+  \[ \cos\!\left(\frac{2\pi k n}{N} + \phi\right) = \tfrac12 e^{j\phi} e^{\,j 2\pi k n/N} + \tfrac12 e^{-j\phi} e^{-j 2\pi k n/N}. \]
+  <p>Now the step into images. Map each sample to a <em>grey level</em> (−1 is black, +1 is white), so the signal becomes a strip of pixels. Then copy that strip down every row. You get an image whose brightness changes from left to right and stays the same from top to bottom.</p>
+  </div>
+
+  <div class="demo" id="d1">
+    <div class="dhead"><b>Demo 1</b><span>From a 1-D signal to a 2-D image</span></div>
+    <div class="controls">
+      <div class="ctl"><label for="d1k">cycles k</label><input type="range" id="d1k" min="0" max="12" step="1" value="3"><output id="d1ko"></output></div>
+      <div class="ctl"><label for="d1p">phase φ</label><input type="range" id="d1p" min="0" max="360" step="5" value="0"><output id="d1po"></output></div>
+    </div>
+    <div class="panels">
+      <figure class="panel"><canvas class="plot" id="d1x"></canvas><figcaption>signal \(x[n]\), \(N = 32\)</figcaption></figure>
+      <figure class="panel"><canvas class="plot" id="d1X"></canvas><figcaption>DFT magnitude \(|X[k']|\), centred</figcaption></figure>
+    </div>
+    <div class="panels" style="margin-top:0.9rem">
+      <figure class="panel"><canvas class="strip" id="d1s"></canvas><figcaption>the same samples drawn as grey levels</figcaption>
+        <p class="note">Each row of the image on the right is this strip. Nothing varies along \(y\), so this is a 2-D sinusoid whose vertical frequency is zero.</p></figure>
+      <figure class="panel" style="max-width:260px"><div class="stack"><canvas class="px" id="d1i"></canvas></div><figcaption>copied down all 32 rows: \(f(x,y) = x[x]\)</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section id="s2">
+  <div class="prose">
+  <span class="secnum">02</span>
+  <h2>One 2-D sinusoid: the grating</h2>
+  <p>In Demo 1 the brightness changed only along \(x\). Let it change along \(y\) too. A 2-D sinusoid on an \(N\times N\) image is</p>
+  \[ f(x,y) = \cos\!\left(\frac{2\pi\,(u x + v y)}{N} + \phi\right). \]
+  <p>It has two frequencies: \(u\) cycles across the width and \(v\) cycles down the height. This pattern is called a <strong>grating</strong>. The brightness is the same wherever \(ux + vy\) is the same, so the stripes are the straight lines \(ux + vy = \text{const}\). Treat the pair as a vector, the <strong>wave vector</strong> \(\mathbf{k} = (u, v)\). Then:</p>
+  <ul>
+    <li><strong>Direction.</strong> \(\mathbf{k}\) points across the stripes, perpendicular to them, at angle \(\theta = \operatorname{atan2}(v, u)\).</li>
+    <li><strong>How fine.</strong> Its length \(\rho = \sqrt{u^2+v^2}\) is the number of cycles you cross if you walk along \(\mathbf{k}\) for a distance \(N\). One stripe period, the wavelength, is \(\lambda = N/\rho\) pixels.</li>
+    <li><strong>Phase.</strong> \(\phi\) slides the stripes along \(\mathbf{k}\) without changing their direction or spacing.</li>
+  </ul>
+  <p>Euler's formula works exactly as in 1-D. A grating is two complex exponentials, so its spectrum is <strong>two dots</strong>, at \(+\mathbf{k}\) and \(-\mathbf{k}\). The demo below adds a constant \(0.5\) so the brightness stays between 0 and 1. That constant is the image's average brightness, and it shows up as a third dot at the centre, \((u,v)=(0,0)\). This centre dot is called the <em>DC</em> term.</p>
+  <p class="note">Coordinates follow image arrays: \(x\) runs right along a row, and \(y\) runs <em>down</em> the columns. The frequency plane uses the same layout, with \(u\) to the right and \(v\) downward. So the arrow in the image and the dot in the spectrum point the same way on screen.</p>
+  </div>
+
+  <div class="demo" id="d2">
+    <div class="dhead"><b>Demo 2</b><span>Grating lab. Drag the dot in the spectrum, or use the sliders.</span></div>
+    <div class="controls">
+      <div class="ctl"><label for="d2u">u</label><input type="range" id="d2u" min="-24" max="24" step="1" value="6"><output id="d2uo"></output></div>
+      <div class="ctl"><label for="d2v">v</label><input type="range" id="d2v" min="-24" max="24" step="1" value="3"><output id="d2vo"></output></div>
+      <div class="ctl"><label for="d2p">phase φ</label><input type="range" id="d2p" min="0" max="360" step="5" value="0"><output id="d2po"></output></div>
+      <div class="ctl"><label for="d2int">integers only</label><input type="checkbox" id="d2int" checked></div>
+    </div>
+    <div class="controls chips" id="d2pre">
+      <button class="btn" data-u="8" data-v="0">vertical stripes</button>
+      <button class="btn" data-u="0" data-v="8">horizontal stripes</button>
+      <button class="btn" data-u="6" data-v="6">diagonal ↘</button>
+      <button class="btn" data-u="6" data-v="-6">diagonal ↗</button>
+      <button class="btn" data-u="20" data-v="5">fine</button>
+      <button class="btn" data-u="2" data-v="1">coarse</button>
+      <button class="btn" data-u="8.5" data-v="0">8.5 cycles (leakage)</button>
+    </div>
+    <div class="panels two">
+      <figure class="panel"><div class="stack"><canvas class="px" id="d2img"></canvas><canvas class="ov"></canvas></div>
+        <figcaption>image \(f(x,y)\), 128 × 128. The arrow is \(\mathbf{k}\), drawn one wavelength long.</figcaption></figure>
+      <figure class="panel"><div class="stack drag" id="d2specbox"><canvas class="px" id="d2spec"></canvas><canvas class="ov"></canvas></div>
+        <figcaption>\(\log(1+|F(u,v)|)\), central 64 × 64 frequencies. Drag here to choose \((u,v)\).</figcaption></figure>
+    </div>
+    <div class="readout" id="d2read"></div>
+  </div>
+
+  <div class="callout">
+    <p><strong>Try these.</strong> (1) Set \(v=0\). This is Demo 1 again: vertical stripes, with dots on the horizontal axis. (2) Swap \(u\) and \(v\). The picture turns by 90°, and so do the dots. (3) Change only φ. The stripes slide, but the dots stay put, because the magnitude spectrum does not see position (Section 10 returns to this). (4) Untick <em>integers only</em> and choose 8.5 cycles. The pattern does not join up smoothly at the image edges, and the energy smears into a line of dots. This smearing is called <em>leakage</em>. The <a href="#wallpaper">wallpaper view</a> in Section 9 explains it.</p>
+  </div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section id="s3">
+  <div class="prose">
+  <span class="secnum">03</span>
+  <h2>The frequency plane: a map of all gratings</h2>
+  <p>Each point \((u,v)\) of the frequency plane stands for one grating. The map below puts each grating at its own address. Read it in polar terms:</p>
+  <ul>
+    <li><strong>Distance from the centre</strong> is the spatial frequency \(\rho\). Gratings near the centre are coarse; gratings far out are fine.</li>
+    <li><strong>Angle</strong> is the direction of \(\mathbf{k}\). The stripes always lie perpendicular to the line from the centre to that cell.</li>
+    <li><strong>The centre</strong>, \((0,0)\), is a flat image: the DC term.</li>
+    <li><strong>Opposite points</strong> \((u,v)\) and \((-u,-v)\) are the two halves of one real grating: Euler's formula needs both exponentials to make a cosine or a sine. For any real image, \(F(-u,-v) = F^*(u,v)\). The magnitudes match, so every magnitude spectrum is point-symmetric about the centre, and the phases are opposite. Cosine tiles with zero phase therefore look identical to their partners. Sine tiles come out inverted, because \(\sin(-\alpha) = -\sin\alpha\). Switch the demo to sine to see this.</li>
+  </ul>
+  </div>
+  <div class="demo" id="d3">
+    <div class="dhead"><b>Demo 3</b><span>Hover or tap a cell. Its mirror partner \((-u,-v)\) lights up too.</span></div>
+    <div class="controls chips"><button class="btn on" id="d3cos">cosine tiles</button><button class="btn" id="d3sin">sine tiles</button></div>
+    <div style="max-width:470px">
+      <div class="stack" id="d3box" style="background:transparent"><canvas id="d3c"></canvas><canvas class="ov"></canvas></div>
+    </div>
+    <div class="readout" id="d3read"><span>Point at a cell</span></div>
+  </div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section id="s4">
+  <div class="prose">
+  <span class="secnum">04</span>
+  <h2>Walk across a grating: you are back in 1-D</h2>
+  <p>Stand at the centre of a grating and walk in direction \(\hat{\mathbf{e}} = (\cos\alpha, \sin\alpha)\). After \(s\) pixels you are at \((x,y) = (s\cos\alpha,\, s\sin\alpha)\). Along your path the brightness is</p>
+  \[ f(s\cos\alpha, s\sin\alpha) = \cos\!\left(\frac{2\pi\,(u\cos\alpha + v\sin\alpha)\, s}{N} + \phi\right), \]
+  <p>an ordinary <strong>1-D sinusoid</strong>. Its frequency is \(\mathbf{k}\cdot\hat{\mathbf{e}} = u\cos\alpha + v\sin\alpha\), the <em>projection</em> of the wave vector onto your direction. If you walk along \(\mathbf{k}\), you see the full frequency \(\rho\). If you walk along the stripes, the frequency is zero and the brightness never changes. Every direction in between sees something in between.</p>
+  </div>
+  <div class="demo" id="d4">
+    <div class="dhead"><b>Demo 4</b><span>Turn the path. The 1-D frequency you see is the shadow of \(\mathbf{k}\) on the path.</span></div>
+    <div class="controls">
+      <div class="ctl"><label for="d4u">u</label><input type="range" id="d4u" min="-16" max="16" step="1" value="8"><output id="d4uo"></output></div>
+      <div class="ctl"><label for="d4v">v</label><input type="range" id="d4v" min="-16" max="16" step="1" value="4"><output id="d4vo"></output></div>
+      <div class="ctl"><label for="d4a">path angle α</label><input type="range" id="d4a" min="0" max="180" step="1" value="0"><output id="d4ao"></output></div>
+    </div>
+    <div class="panels">
+      <figure class="panel"><div class="stack"><canvas class="px" id="d4img"></canvas><canvas class="ov"></canvas></div><figcaption>the grating, with your path</figcaption></figure>
+      <figure class="panel"><div class="stack" style="background:var(--surface-2)"><canvas id="d4fp"></canvas><canvas class="ov"></canvas></div><figcaption>frequency plane: \(\mathbf{k}\) and its projection onto the path direction</figcaption></figure>
+    </div>
+    <figure class="panel" style="margin-top:0.9rem"><canvas class="plot" id="d4prof"></canvas><figcaption>brightness along the path, \(s\) from −64 to 63</figcaption></figure>
+    <div class="readout" id="d4read"></div>
+  </div>
+  <div class="callout key">
+    <p><strong>Why this matters.</strong> The same idea runs the other way. Take an image, sum it along one direction, and take the 1-D Fourier transform of the result. You get exactly the 2-D spectrum along a line through the centre at that angle. This is the <em>projection-slice theorem</em>, and CT scanners are built on it: each X-ray view gives one line through the 2-D spectrum of a body slice.</p>
+  </div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section id="s5">
+  <div class="prose">
+  <span class="secnum">05</span>
+  <h2>The 2-D DFT is 1-D DFTs, first on rows, then on columns</h2>
+  <p>The 2-D complex exponential splits into a product of two 1-D exponentials:</p>
+  \[ e^{-j2\pi (ux + vy)/N} = e^{-j2\pi ux/N}\; e^{-j2\pi vy/N}. \]
+  <p>So the double sum of the 2-D DFT can be done in two stages:</p>
+  \[ F(u,v) = \sum_{y=0}^{N-1} e^{-j2\pi v y/N} \underbrace{\left[\sum_{x=0}^{N-1} f(x,y)\, e^{-j2\pi u x/N}\right]}_{\text{1-D DFT of row } y \;=\; R(u,\,y)}. \]
+  <p>First take the 1-D DFT of every row. That tells you the horizontal frequencies present in each row. Then take the 1-D DFT of every column of the result. You need nothing beyond the 1-D DFT, and this is how every FFT library computes 2-D transforms: an \(N\times N\) image costs \(2N\) FFTs of length \(N\), about \(2N^2\log_2 N\) operations.</p>
+  </div>
+  <div class="demo" id="d5">
+    <div class="dhead"><b>Demo 5</b><span>The two stages, shown as log-magnitudes</span></div>
+    <div class="controls chips" id="d5pick">
+      <button class="btn on" data-k="rect">rectangle</button>
+      <button class="btn" data-k="plaid">two gratings</button>
+      <button class="btn" data-k="photo">campus photo</button>
+    </div>
+    <div class="panels">
+      <figure class="panel"><div class="stack"><canvas class="px" id="d5a"></canvas></div><figcaption>\(f(x,y)\): rows run left to right</figcaption></figure>
+      <figure class="panel"><div class="stack"><canvas class="px" id="d5b"></canvas></div><figcaption>after row DFTs: \(|R(u,y)|\). The horizontal axis is now \(u\); the vertical axis is still the row \(y\).</figcaption></figure>
+      <figure class="panel"><div class="stack"><canvas class="px" id="d5c"></canvas></div><figcaption>after column DFTs: \(|F(u,v)|\), the 2-D spectrum</figcaption></figure>
+    </div>
+    <p class="note" id="d5note"></p>
+  </div>
+</section>
+
+<!-- ============ 6 ============ -->
+<section id="s6">
+  <div class="prose">
+  <span class="secnum">06</span>
+  <h2>Adding gratings</h2>
+  <p>The Fourier transform is linear: the spectrum of a sum is the sum of the spectra. Add two gratings, and you get both pairs of dots. The picture can still surprise you. Two crossed gratings make a plaid. Two gratings with nearly the same \(\mathbf{k}\) make a slow <em>moiré</em> band. This is the 2-D version of beats: \(\cos a + \cos b = 2\cos\frac{a-b}{2}\cos\frac{a+b}{2}\), so the band varies at the <em>difference</em> wave vector.</p>
+  </div>
+  <div class="demo" id="d6">
+    <div class="dhead"><b>Demo 6</b><span>Mix up to three gratings</span></div>
+    <div class="controls chips" id="d6pre">
+      <button class="btn" data-p="plaid">plaid</button>
+      <button class="btn" data-p="diag">crossed diagonals</button>
+      <button class="btn" data-p="moire">moiré (beats)</button>
+      <button class="btn" data-p="hex">three at 120°</button>
+      <button class="btn" data-p="harm">harmonics 1, 3, 5</button>
+    </div>
+    <div id="d6rows"></div>
+    <div class="panels">
+      <figure class="panel"><div class="stack"><canvas class="px" id="d6img"></canvas></div><figcaption>sum of the enabled gratings</figcaption></figure>
+      <figure class="panel"><div class="stack"><canvas class="px" id="d6spec"></canvas><canvas class="ov"></canvas></div><figcaption>spectrum (central 64 × 64): one pair of dots per grating</figcaption></figure>
+      <figure class="panel"><div id="d6parts" style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.4rem"></div><figcaption>the individual gratings</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 7 ============ -->
+<section id="s7">
+  <div class="prose">
+  <span class="secnum">07</span>
+  <h2>The 2-D DFT, formally</h2>
+  <p>We have seen a few gratings. Now use <em>all</em> of them. For an \(N \times N\) image there are exactly \(N^2\) complex exponentials with integer \((u, v)\), and together they can build any image of that size. The 2-D DFT and its inverse are</p>
+  \[ F(u,v) = \sum_{x=0}^{N-1}\sum_{y=0}^{N-1} f(x,y)\, e^{-j2\pi (ux+vy)/N}, \qquad
+     f(x,y) = \frac{1}{N^2}\sum_{u=0}^{N-1}\sum_{v=0}^{N-1} F(u,v)\, e^{+j2\pi (ux+vy)/N}. \]
+  <p>Read them one at a time:</p>
+  <ul>
+    <li><strong>Forward (analysis).</strong> \(F(u,v)\) is the correlation of the image with the exponential at \(\mathbf{k}=(u,v)\). It asks how much of that grating the image contains, and at what phase.</li>
+    <li><strong>Inverse (synthesis).</strong> The image is a weighted sum of exponentials. Pair each \((u,v)\) with \((-u,-v)\) and every pair becomes one real grating. Its amplitude is \(2|F(u,v)|/N^2\) and its phase is \(\angle F(u,v)\):
+    \[ f(x,y) = \frac{F(0,0)}{N^2} + \sum_{\text{pairs}} \frac{2|F(u,v)|}{N^2}\cos\!\left(\frac{2\pi(ux+vy)}{N} + \angle F(u,v)\right). \]</li>
+    <li><strong>Magnitude and phase.</strong> \(|F|\) says how strong each grating is. \(\angle F\) says where its stripes sit.</li>
+  </ul>
+  <p>The image below shows the real parts \(\cos(2\pi(ux+vy)/N)\) of all 64 exponentials for a tiny \(8\times 8\) image, arranged as on the frequency plane (centred, \(u, v = -4 \dots 3\)). Any 8 × 8 image is a weighted sum of these 64 patterns, plus their sine partners. Read that sentence again, then look at the patterns below. It is a bigger claim than it first seems.</p>
+  </div>
+  <div class="demo" id="d7">
+    <div class="dhead"><b>Demo 7</b><span>The 8 × 8 Fourier basis. Click a pattern to see it large.</span></div>
+    <div class="controls chips"><button class="btn on" id="d7cos">real part (cos)</button><button class="btn" id="d7sin">imaginary part (−sin)</button></div>
+    <div class="panels two" style="max-width:none; grid-template-columns: minmax(0,1.4fr) minmax(0,1fr)">
+      <div class="stack" id="d7box" style="background:transparent; cursor:pointer"><canvas id="d7c"></canvas><canvas class="ov"></canvas></div>
+      <figure class="panel"><div class="stack"><canvas class="px" id="d7big"></canvas></div><figcaption id="d7cap"></figcaption></figure>
+    </div>
+  </div>
+  <div class="prose">
+  <div class="callout key">
+    <p><strong>Pause here: one set of building blocks for every picture.</strong></p>
+    <p>Count the possible 8 × 8 images. Each pixel can take 256 grey levels, so there are \(256^{64} = 2^{512} \approx 10^{154}\) different images. That is far more than the roughly \(10^{80}\) atoms in the observable universe. They include every letter in every font, every tiny icon, every 8 × 8 corner of every photo ever taken, and every possible pattern of noise.</p>
+    <p>Every one of them is built from <em>the same</em> set of stripe patterns. Nothing about the patterns is chosen for a particular image. The only thing that changes from image to image is the recipe: how much of each pattern to use, and how far to slide it. A picture is just a recipe of 64 numbers for mixing the same fixed set of gratings. In the DFT these come out as 64 complex numbers, but mirror points are complex conjugates of each other, so only 64 real numbers are free: one per pixel.</p>
+    <p>You already use another set of 64 building blocks without thinking about it: the pixels. Each "pixel block" is a black image with one bright pixel, and the pixel values are its weights. The Fourier patterns are a second set of building blocks that describes the same images just as completely, like measuring a point along rotated axes instead of the usual ones. Mathematicians call such a complete set a <em>basis</em>. Moving between the two loses nothing. That is exactly why the inverse DFT gives back the image perfectly.</p>
+  </div>
+  <p>Spend a few minutes on these questions before opening the answers. Use Demo 7 to check.</p>
+  <details class="think">
+    <summary>Puzzle 1. There are 64 cosine patterns and 64 sine patterns: 128 in all. But an 8 × 8 image has only 64 numbers. Are 64 of the patterns wasted?</summary>
+    <p>Look at Demo 7 again. A pattern at \((u,v)\) and its partner at \((-u,-v)\) have the <em>same</em> cosine, and their sines differ only in sign. So each pair contributes just one new cosine and one new sine. On an 8-point grid, frequencies wrap around every 8 steps, so \(+4\) is the same frequency as \(-4\). That means four points are their own partners: \((0,0)\), \((-4,0)\), \((0,-4)\) and \((-4,-4)\). Flipping 0 gives 0, and flipping \(-4\) gives \(+4\), which is \(-4\) again. Their sine patterns are all zero, because \(\sin(\pi x) = 0\) at every whole-number pixel (check it in the demo), so they contribute only a cosine. Their \(F\) values are purely real.</p>
+    <div class="tablewrap"><table class="cmp">
+      <tr><th>Group</th><th>Points</th><th>Real numbers each</th><th>Total</th></tr>
+      <tr><td>Ordinary points, in mirror pairs</td><td>60 points = 30 pairs</td><td>2 per pair (cosine + sine weight)</td><td>60</td></tr>
+      <tr><td>Their own partners</td><td>4</td><td>1 (cosine weight only)</td><td>4</td></tr>
+      <tr><td><strong>All 64 points</strong></td><td></td><td></td><td><strong>64</strong></td></tr>
+    </table></div>
+    <p>Exactly one real number per pixel: nothing is wasted, and nothing is missing. It works the same way in 1-D. An 8-point real signal has two such points, DC (\(k=0\)) and Nyquist (\(k=4\)), plus 3 pairs, so \(3\times 2 + 2 = 8\).</p>
+  </details>
+  <details class="think">
+    <summary>Puzzle 2. Which image needs the <em>fewest</em> patterns, and which needs <em>all</em> of them?</summary>
+    <p>A flat grey image needs only one: the DC pattern. A single bright pixel on black, which needs only one pixel block, needs <em>every</em> pattern with equal strength. All 64 gratings must line up to make a peak at that one pixel and cancel everywhere else. An image that is simple in one basis can be complicated in the other. This is the 2-D form of a fact you already know: a click has a flat spectrum.</p>
+  </details>
+  <details class="think">
+    <summary>Puzzle 3. Suppose the image <em>is</em> one of the patterns, say the \((2,1)\) cosine. Does it need one number or two?</summary>
+    <p>It depends on how you count, but only <strong>one number is nonzero</strong>. Counted with the real cosine and sine patterns, the \((2,1)\) cosine weight is 1 and every other weight is 0. In the DFT, <em>two</em> values light up: \(F(2,1) = 32\) and \(F(-2,-1) = 32\), where \(32 = N^2/2\). They are the two dots you saw in Demo 2. But \(F(-2,-1) = F^*(2,1)\), so the second dot is a mirror copy and carries nothing new.</p>
+    <p>Now change the image slightly and count again:</p>
+    <div class="tablewrap"><table class="cmp">
+      <tr><th>Image</th><th>DFT values lit</th><th>Slots</th><th>Nonzero real numbers</th></tr>
+      <tr><td>exactly the \((2,1)\) cosine</td><td>2 (mirror copies)</td><td>2</td><td>1 (cosine weight; the sine slot is 0)</td></tr>
+      <tr><td>the same stripes slid along: \(\cos(\ldots + \phi)\)</td><td>2: \(32\,e^{\pm j\phi}\)</td><td>2</td><td>2 (amplitude and phase, or cosine and sine weights)</td></tr>
+      <tr><td>a self-partner pattern, e.g. the checkerboard at \((-4,-4)\)</td><td>1, and it is real</td><td>1</td><td>1</td></tr>
+      <tr><td>the stripes as a real picture: \(128 + 127\cos(\ldots)\)</td><td>3 (DC + the pair)</td><td>1 + 2</td><td>2 (DC + cosine weight)</td></tr>
+    </table></div>
+    <p>A <em>slot</em> is a real number the frequency is allowed to carry. Every ordinary frequency pair always has two slots, amplitude and phase. A self-partner frequency has one, because its \(F\) is real (a negative value is just a phase of \(\pi\), not a second number). The exact \((2,1)\) cosine happens to leave one of its two slots at zero. Slide the stripes and both slots fill.</p>
+    <p>The last row matters. A cosine goes negative, but real pixels cannot, so showing the stripes as a picture needs an offset, and that offset is the DC pattern. So among images with non-negative pixels, the flat grey image from Puzzle 2 is the only one with a single nonzero number. A striped image that exactly matches one of the patterns is next: DC plus one weight. The single bright pixel, which needs all 64, is at the other end.</p>
+  </details>
+  <details class="think">
+    <summary>Puzzle 4. If every image uses all the patterns, why bother switching from pixels to Fourier patterns?</summary>
+    <p>For the images people actually look at, most Fourier weights are tiny. Neighbouring pixels in a photo are usually similar, so the coarse patterns carry nearly everything and the fine ones carry little. JPEG relies on this. It cuts a photo into 8 × 8 blocks, rewrites each block with a cosine-only cousin of these patterns (the DCT), and then stores the fine-pattern weights roughly or not at all. The photos on your phone are stored this way: as recipes of 8 × 8 stripe patterns. Section 8 shows how few weights a whole photo needs.</p>
+  </details>
+  <p>Now test the puzzles yourself. Paint any 8 × 8 image below and watch its 64 Fourier weights change. Try one bright pixel (Puzzle 2), the stripes (Puzzle 3), and a letter or a smooth blob (Puzzle 4).</p>
+  </div>
+  <div class="demo" id="d7p">
+    <div class="dhead"><b>Demo 7b</b><span>Paint an 8 × 8 image. Click or drag on the left grid. Point at a weight to read its value.</span></div>
+    <div class="controls">
+      <div class="chips" id="d7pbrush"><button class="btn on" data-k="1">paint white</button><button class="btn" data-k="0.5">paint grey</button><button class="btn" data-k="0">paint black</button></div>
+    </div>
+    <div class="controls chips" id="d7ppre">
+      <button class="btn" data-k="clear">all black</button>
+      <button class="btn" data-k="flat">flat grey</button>
+      <button class="btn" data-k="pixel">one bright pixel</button>
+      <button class="btn" data-k="stripes">stripes (2, 1)</button>
+      <button class="btn" data-k="checker">checkerboard</button>
+      <button class="btn" data-k="letter">letter L</button>
+      <button class="btn" data-k="blob">smooth blob</button>
+      <button class="btn" data-k="random">random</button>
+    </div>
+    <div class="panels">
+      <figure class="panel"><div class="stack drag" id="d7pimgbox"><canvas class="px" id="d7pimg"></canvas><canvas class="ov"></canvas></div><figcaption>your image \(f(x,y)\), black = 0, white = 1</figcaption></figure>
+      <figure class="panel"><div class="stack" id="d7pw" style="background:transparent"><canvas class="ov"></canvas></div><figcaption>\(|F(u,v)|\) on the centred frequency grid, \(u, v = -4 \dots 3\). A dot means zero.</figcaption></figure>
+      <figure class="panel"><div class="stack"><canvas class="px" id="d7prec"></canvas></div><figcaption id="d7preccap">rebuilt from the strongest gratings</figcaption></figure>
+    </div>
+    <div class="controls" style="margin-top:0.9rem">
+      <div class="ctl"><label for="d7pk">keep strongest</label><input type="range" id="d7pk" min="1" max="34" step="1" value="34" style="width:200px"><output id="d7pko"></output></div>
+    </div>
+    <div class="readout" id="d7pread"></div>
+    <div class="readout" id="d7phov"><span>Point at a weight</span></div>
+    <p class="note">The 64 frequencies form 34 real gratings: 30 mirror pairs plus the 4 points that are their own partners. The slider keeps the strongest of those 34 and drops the rest.</p>
+  </div>
+  <div class="prose">
+  <h3>Properties you will use all the time</h3>
+  <div class="tablewrap">
+  <table class="cmp">
+    <tr><th>Property</th><th>Statement</th><th>What it means</th></tr>
+    <tr><td>Conjugate symmetry</td><td>\(F(-u,-v) = F^*(u,v)\) for real \(f\)</td><td>Point symmetry: half the plane is redundant.</td></tr>
+    <tr><td>Periodicity</td><td>\(F(u+N, v) = F(u, v+N) = F(u,v)\)</td><td>Frequencies wrap around. After shifting, \(u = -4\) on an 8-point grid is the checkerboard, the finest pattern possible (Nyquist).</td></tr>
+    <tr><td>Separability</td><td>\(f(x,y) = g(x)h(y) \Rightarrow F(u,v) = G(u)H(v)\)</td><td>A rectangle's spectrum is sinc × sinc.</td></tr>
+    <tr><td>Shift</td><td>\(f(x-x_0, y-y_0) \leftrightarrow F(u,v)\, e^{-j2\pi(ux_0+vy_0)/N}\)</td><td>Moving the image changes only the phase. Position is stored in phase.</td></tr>
+    <tr><td>Rotation</td><td>rotate \(f\) by \(\beta\) \(\Rightarrow\) rotate \(F\) by \(\beta\)</td><td>Orientation is preserved (Section 9).</td></tr>
+    <tr><td>Scaling</td><td>\(f(ax, by) \leftrightarrow \frac{1}{|ab|}F\!\left(\frac{u}{a}, \frac{v}{b}\right)\) (continuous)</td><td>Make it bigger and the spectrum gets smaller.</td></tr>
+    <tr><td>Convolution</td><td>\(f * h \leftrightarrow F\,H\)</td><td>Blurring is multiplication in the frequency plane (Section 11).</td></tr>
+    <tr><td>Parseval</td><td>\(\sum_{x,y} |f|^2 = \frac{1}{N^2}\sum_{u,v}|F|^2\)</td><td>Energy can be counted in either domain.</td></tr>
+  </table>
+  </div>
+  <p class="note">The continuous version replaces the sums with integrals: \(F(u,v) = \iint f(x,y)\,e^{-j2\pi(ux+vy)}\,dx\,dy\). We stay discrete because images are arrays.</p>
+  </div>
+</section>
+
+<!-- ============ 8 ============ -->
+<section id="s8">
+  <div class="prose">
+  <span class="secnum">08</span>
+  <h2>Build a photo, one grating at a time</h2>
+  <p>Here the inverse DFT runs live. Start from a flat grey image (the DC term alone) and add gratings back. You can add them in two orders:</p>
+  <ul>
+    <li><strong>Strongest first</strong>: largest \(|F(u,v)|\) first. This is the best possible \(K\)-term approximation in squared error, and it is the idea behind transform compression.</li>
+    <li><strong>Lowest frequency first</strong>: nearest the centre first. The picture comes into focus coarse to fine, like a lens slowly being focused.</li>
+  </ul>
+  </div>
+  <div class="demo" id="d8">
+    <div class="dhead"><b>Demo 8</b><span>Inverse DFT with only K grating pairs kept</span></div>
+    <div class="controls">
+      <div class="chips" id="d8img"><button class="btn on" data-k="building">building</button><button class="btn" data-k="aerial">aerial view</button></div>
+      <div class="chips" id="d8ord"><button class="btn on" data-k="mag">strongest first</button><button class="btn" data-k="freq">lowest frequency first</button></div>
+    </div>
+    <div class="controls">
+      <div class="ctl"><label for="d8k">pairs K</label><input type="range" id="d8k" min="0" max="1000" step="1" value="557" style="width:220px"><output id="d8ko"></output></div>
+      <button class="btn" id="d8play">▶ play</button>
+    </div>
+    <div class="panels">
+      <figure class="panel"><div class="stack"><canvas class="px" id="d8rec"></canvas></div><figcaption>sum of the first \(K\) grating pairs</figcaption></figure>
+      <figure class="panel"><div class="stack"><canvas class="px" id="d8spec"></canvas></div><figcaption>spectrum: bright = used, dim = not yet used</figcaption></figure>
+      <figure class="panel"><div class="stack"><canvas class="px" id="d8last"></canvas><canvas class="ov"></canvas></div><figcaption id="d8lastcap">the grating added last</figcaption></figure>
+    </div>
+    <div class="readout" id="d8read"></div>
+  </div>
+  <div class="callout">
+    <p><strong>What to notice.</strong> With strongest-first, 1% of the pairs (327) already give a recognisable building, blurry but with the window rows in place. They hold about 78% of the detail energy. At 10% the photo is sharp but slightly grainy (about 94%, with an RMS error of 18 grey levels). Most of the energy in a natural photo sits in a few strong, mostly low-frequency gratings. The fine gratings carry edges and texture. Keep only the low ones and you get blur. Also look at the rippling ghosts near sharp edges when only low frequencies are kept. These are ringing artefacts: the 2-D Gibbs phenomenon.</p>
+  </div>
+</section>
+
+<!-- ============ 9 ============ -->
+<section id="s9">
+  <div class="prose">
+  <span class="secnum">09</span>
+  <h2>Reading a 2-D spectrum</h2>
+  <p>With practice you can look at a spectrum and say what the image contains. Five rules of thumb:</p>
+  <ol>
+    <li><strong>Edges make lines through the centre, perpendicular to the edge.</strong> A sharp edge contains every frequency, all with \(\mathbf{k}\) perpendicular to the edge.</li>
+    <li><strong>Small things make wide spectra, and big things make narrow ones</strong> (scaling).</li>
+    <li><strong>Rotate the image and the spectrum rotates with it</strong> (rotation).</li>
+    <li><strong>Repetition makes dots.</strong> A pattern that repeats has a spectrum of isolated dots (harmonics). A lattice of dots in the image gives a lattice of dots in the spectrum.</li>
+    <li><strong>The image edges count as edges.</strong> The DFT treats the image as one tile of an endlessly repeating wallpaper. If the left and right borders do not match, the jump between tiles shows up as a bright <span class="mono">+</span> cross along the axes. Fade the borders out with a window (here, a 2-D Hann window) and the cross goes away. <a href="#wallpaper">The wallpaper view</a> below shows why.</li>
+  </ol>
+  </div>
+  <div class="demo" id="d9">
+    <div class="dhead"><b>Demo 9</b><span>Spectrum gallery</span></div>
+    <div class="controls chips" id="d9pick">
+      <button class="btn on" data-k="rect">rectangle</button>
+      <button class="btn" data-k="disk">disk</button>
+      <button class="btn" data-k="gauss">Gaussian blob</button>
+      <button class="btn" data-k="line">thin line</button>
+      <button class="btn" data-k="square">square-wave stripes</button>
+      <button class="btn" data-k="dots">dot lattice</button>
+      <button class="btn" data-k="text">text</button>
+      <button class="btn" data-k="photo">campus photo</button>
+    </div>
+    <div class="controls">
+      <div class="ctl"><label for="d9r">rotate</label><input type="range" id="d9r" min="0" max="180" step="1" value="0"><output id="d9ro"></output></div>
+      <div class="ctl"><label for="d9s">size</label><input type="range" id="d9s" min="0.5" max="2" step="0.05" value="1"><output id="d9so"></output></div>
+      <div class="ctl"><label for="d9w">Hann window</label><input type="checkbox" id="d9w"></div>
+    </div>
+    <div class="panels two">
+      <figure class="panel"><div class="stack"><canvas class="px" id="d9img"></canvas></div><figcaption>image, 256 × 256</figcaption></figure>
+      <figure class="panel"><div class="stack"><canvas class="px" id="d9spec"></canvas></div><figcaption>\(\log(1+|F|)\), all 256 × 256 frequencies, centred</figcaption></figure>
+    </div>
+    <p class="note" id="d9note"></p>
+  </div>
+  <div class="prose" id="wallpaper">
+  <h3>Why the + cross? The wallpaper view</h3>
+  <p>The DFT uses only gratings that repeat exactly \(N\) pixels apart. So it cannot tell an image apart from an endless wallpaper made of copies of that image, laid edge to edge. The demo below draws that wallpaper: 3 × 3 copies, with the real image outlined in the middle.</p>
+  <p>Look at the joins. A photo's right border almost never matches its left border, and its top almost never matches its bottom. So the wallpaper has sharp <em>seams</em>: a vertical seam between tiles side by side, and a horizontal seam between tiles stacked up. Rule 1 says a sharp edge puts energy along a line through the centre, perpendicular to the edge. The vertical seam lights up the horizontal \(u\)-axis, and the horizontal seam lights up the vertical \(v\)-axis. Together they make the + cross. The cross belongs to the borders, not to the scene.</p>
+  <p>The fix is to remove the seams. Multiply the image by a <strong>2-D Hann window</strong>, which is 1 in the middle and falls smoothly to 0 at every border:</p>
+  \[ w(x,y) = w(x)\,w(y), \qquad w(n) = \sin^2\!\left(\frac{\pi n}{N}\right) = \tfrac12\left(1 - \cos\frac{2\pi n}{N}\right). \]
+  <p>Here we fade the image towards its average grey \(\mu\), so the mean brightness (the DC term) is unchanged:</p>
+  \[ g(x,y) = \mu + \big(f(x,y) - \mu\big)\, w(x)\, w(y). \]
+  <p>Every border of \(g\) is now the same flat grey, so the tiles join without a jump, and the part of the cross caused by the seams disappears. Any axis lines that remain come from real horizontal and vertical edges in the picture.</p>
+  </div>
+  <div class="demo" id="d9b">
+    <div class="dhead"><b>Demo 9b</b><span>The image as the DFT sees it, with and without a Hann window</span></div>
+    <div class="controls chips" id="d9bpick">
+      <button class="btn on" data-k="building">building</button>
+      <button class="btn" data-k="ramp">stripes on a ramp</button>
+      <button class="btn" data-k="grating">8.5-cycle grating</button>
+    </div>
+    <div class="panels two" style="max-width:none">
+      <figure class="panel"><div class="stack"><canvas id="d9bta"></canvas><canvas class="ov"></canvas></div><figcaption>as is: 3 × 3 copies, seams visible</figcaption></figure>
+      <figure class="panel"><div class="stack"><canvas class="px" id="d9bsa"></canvas></div><figcaption>its spectrum \(\log(1+|F|)\): lines along the axes from the seams</figcaption></figure>
+      <figure class="panel"><div class="stack"><canvas id="d9btb"></canvas><canvas class="ov"></canvas></div><figcaption>after the Hann window: the tiles join smoothly</figcaption></figure>
+      <figure class="panel"><div class="stack"><canvas class="px" id="d9bsb"></canvas></div><figcaption>its spectrum, on the same colour scale: the seam part of the cross is gone</figcaption></figure>
+    </div>
+    <p class="note" id="d9bnote"></p>
+  </div>
+  <div class="prose">
+  <p><strong>Seams and leakage are the same thing.</strong> A grating with a non-whole number of cycles does not join up at the image border, so its energy leaks into neighbouring frequencies. The + cross is that same leakage, caused by the border jump and spread along the axes. The same idea applies to 1-D signals: a sinusoid that does not fit its frame leaks, and a window tames it. Pick the 8.5-cycle grating above: without the window its dots smear into a long line, and with the window they shrink to a compact blob.</p>
+  <p><strong>The cost.</strong> A window is not free. It dims everything near the borders, so details there are lost. It also slightly blurs every spectral dot, because multiplying by \(w\) in the image convolves the spectrum with the window's own small spectrum. In other words, the window trades a little sharpness in the spectrum for removing the seams. Use a window when you want to <em>read</em> a spectrum, as in Demo 12. Do not use one when you need the image back exactly, as in filtering.</p>
+  </div>
+</section>
+
+<!-- ============ 10 ============ -->
+<section id="s10">
+  <div class="prose">
+  <span class="secnum">10</span>
+  <h2>Magnitude or phase: which one holds the picture?</h2>
+  <p>Spectrum plots almost always show \(|F|\), so it is easy to assume the magnitude is what matters. Test it. Take the magnitude of one photo and the phase of another, combine them, and invert:</p>
+  \[ g = \mathcal{F}^{-1}\!\left\{\, |F_A|\; e^{\,j\angle F_B} \right\}. \]
+  <p>The result looks like the image that gave the <em>phase</em>. Phase records where each grating's stripes sit, and edges exist only where many gratings line up in phase. Magnitude mostly records the overall mix of coarse and fine, which is quite similar between natural photos (it falls off roughly as \(1/\rho\)).</p>
+  </div>
+  <div class="demo" id="d10">
+    <div class="dhead"><b>Demo 10</b><span>Swap magnitude and phase between two photos</span></div>
+    <div class="panels" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+      <figure class="panel"><div class="stack"><canvas class="px" id="d10a"></canvas></div><figcaption>A: building</figcaption></figure>
+      <figure class="panel"><div class="stack"><canvas class="px" id="d10b"></canvas></div><figcaption>B: aerial view</figcaption></figure>
+      <figure class="panel"><div class="stack"><canvas class="px" id="d10ab"></canvas></div><figcaption>magnitude of A, phase of B</figcaption></figure>
+      <figure class="panel"><div class="stack"><canvas class="px" id="d10ba"></canvas></div><figcaption>magnitude of B, phase of A</figcaption></figure>
+      <figure class="panel"><div class="stack"><canvas class="px" id="d10m"></canvas></div><figcaption>A, magnitude only (phase set to 0), centred</figcaption></figure>
+      <figure class="panel"><div class="stack"><canvas class="px" id="d10p"></canvas></div><figcaption>A, phase only (all \(|F| = 1\))</figcaption></figure>
+    </div>
+    <p class="note">The phase-only image shows the outlines of the building. The magnitude-only image is just a blob at the centre: with every phase set to zero, all the gratings peak at the origin.</p>
+  </div>
+</section>
+
+<!-- ============ 11 ============ -->
+<section id="s11">
+  <div class="prose">
+  <span class="secnum">11</span>
+  <h2>Filtering in the frequency plane</h2>
+  <p>Now everything comes together. To filter an image, multiply its spectrum by a mask \(H(u,v)\) and invert:</p>
+  \[ g = \mathcal{F}^{-1}\{\, H \cdot F \,\}. \]
+  <p>By the convolution theorem, this is the same as convolving the image with \(h = \mathcal{F}^{-1}\{H\}\). Because each point of the plane is a grating with a known frequency and direction, you can design the mask by eye. Keep a disc around the centre to blur. Remove it to keep only edges. Keep a wedge to keep only one orientation.</p>
+  </div>
+  <div class="demo" id="d11">
+    <div class="dhead"><b>Demo 11</b><span>Design a mask and watch the result</span></div>
+    <div class="controls">
+      <div class="chips" id="d11img"><button class="btn on" data-k="building">building</button><button class="btn" data-k="aerial">aerial view</button></div>
+      <select id="d11type" aria-label="filter type">
+        <option value="low">low-pass (disc)</option>
+        <option value="high">high-pass (outside disc)</option>
+        <option value="band">band-pass (ring)</option>
+        <option value="wedge">orientation (wedge)</option>
+      </select>
+      <div class="ctl"><label for="d11soft">soft (Gaussian) edge</label><input type="checkbox" id="d11soft"></div>
+    </div>
+    <div class="controls">
+      <div class="ctl"><label for="d11r">radius</label><input type="range" id="d11r" min="2" max="128" step="1" value="20"><output id="d11ro"></output></div>
+      <div class="ctl"><label for="d11w">ring width</label><input type="range" id="d11w" min="2" max="60" step="1" value="12"><output id="d11wo"></output></div>
+      <div class="ctl"><label for="d11a">wedge angle</label><input type="range" id="d11a" min="0" max="179" step="1" value="90"><output id="d11ao"></output></div>
+    </div>
+    <div class="panels">
+      <figure class="panel"><div class="stack"><canvas class="px" id="d11o"></canvas></div><figcaption>original</figcaption></figure>
+      <figure class="panel"><div class="stack"><canvas class="px" id="d11s"></canvas></div><figcaption>spectrum, masked part dimmed</figcaption></figure>
+      <figure class="panel"><div class="stack"><canvas class="px" id="d11g"></canvas></div><figcaption>filtered image \(g\)</figcaption></figure>
+    </div>
+    <p class="note" id="d11note"></p>
+  </div>
+</section>
+
+<!-- ============ 12 ============ -->
+<section id="s12">
+  <div class="prose">
+  <span class="secnum">12</span>
+  <h2>Your own image: magnitude and phase</h2>
+  <p>Now try the ideas on any picture you like: a photo of a fabric, a brick wall, a page of text, a fence, a face. The image is converted to grey, cropped to a square and transformed. You get two maps of the same spectrum:</p>
+  <ul>
+    <li><strong>Magnitude</strong> \(\log(1+|F(u,v)|)\): how strong each grating is. Look for the patterns from Section 9: lines perpendicular to edges, dots from repetition, and the border cross. Tick the Hann window to remove the cross; <a href="#wallpaper">the wallpaper view</a> in Section 9 explains why it appears.</li>
+    <li><strong>Phase</strong> \(\angle F(u,v)\), drawn with a colour wheel from \(-\pi\) to \(+\pi\): where each grating's stripes sit. For a photo it looks like noise, but Section 10 showed it carries the structure. It is antisymmetric about the centre: the phase at \((-u,-v)\) is minus the phase at \((u,v)\), because \(\angle F(-u,-v) = -\angle F(u,v)\).</li>
+  </ul>
+  <p>Point at either map to read the values at one frequency and see which grating it stands for.</p>
+  </div>
+  <div class="demo" id="d12">
+    <div class="dhead"><b>Demo 12</b><span>Drop an image, choose a file, or paste one (Ctrl+V). It stays on your computer: everything runs in this page.</span></div>
+    <label class="drop" id="d12drop" for="d12file">
+      <span><strong>Drop an image here</strong> or click to choose a file</span>
+      <input type="file" id="d12file" accept="image/*">
+    </label>
+    <div class="controls">
+      <div class="chips" id="d12size"><button class="btn on" data-k="256">256 × 256</button><button class="btn" data-k="512">512 × 512</button></div>
+      <div class="ctl"><label for="d12win">Hann window</label><input type="checkbox" id="d12win"></div>
+      <div class="ctl"><label for="d12dim">dim phase where |F| is small</label><input type="checkbox" id="d12dim"></div>
+    </div>
+    <div class="panels">
+      <figure class="panel"><div class="stack"><canvas class="px" id="d12img"></canvas></div><figcaption id="d12name">input, grey</figcaption></figure>
+      <figure class="panel"><div class="stack drag" id="d12mbox"><canvas class="px" id="d12mag"></canvas><canvas class="ov"></canvas></div><figcaption>magnitude \(\log(1+|F|)\), centred</figcaption></figure>
+      <figure class="panel"><div class="stack drag" id="d12pbox"><canvas class="px" id="d12ph"></canvas><canvas class="ov"></canvas></div>
+        <figcaption>phase \(\angle F\), centred<canvas class="strip" id="d12bar" style="height:10px;margin-top:0.3rem"></canvas><span class="mono" style="display:flex;justify-content:space-between;font-size:0.72rem"><span>−π</span><span>0</span><span>+π</span></span></figcaption></figure>
+      <figure class="panel"><div class="stack"><canvas class="px" id="d12gr"></canvas></div><figcaption>the grating at the point you are pointing at</figcaption></figure>
+    </div>
+    <div class="readout" id="d12read"><span>Point at the magnitude or phase map</span></div>
+  </div>
+</section>
+
+<!-- ============ 13 ============ -->
+<section id="s13">
+  <div class="prose">
+  <span class="secnum">13</span>
+  <h2>Summary</h2>
+  <div class="tablewrap">
+  <table class="cmp">
+    <tr><th>1-D signal</th><th>2-D image</th></tr>
+    <tr><td>sinusoid: frequency \(k\), phase \(\phi\)</td><td>grating: wave vector \(\mathbf{k}=(u,v)\) gives frequency \(\rho\) <em>and</em> direction \(\theta\), plus phase \(\phi\)</td></tr>
+    <tr><td>spectrum on a line, spikes at \(\pm k\)</td><td>spectrum on a plane, dots at \(\pm\mathbf{k}\)</td></tr>
+    <tr><td>\(X[k]=\sum_n x[n]e^{-j2\pi kn/N}\)</td><td>\(F(u,v)=\sum_{x,y} f(x,y)e^{-j2\pi(ux+vy)/N}\): row DFTs, then column DFTs</td></tr>
+    <tr><td>low \(k\) = slow change</td><td>near the centre = coarse structure; far out = edges and texture</td></tr>
+    <tr><td>a click gives a flat spectrum</td><td>an edge gives a line perpendicular to it</td></tr>
+    <tr><td>windowing reduces leakage</td><td>windowing removes the <span class="mono">+</span> cross from the image borders</td></tr>
+    <tr><td>filter = multiply the spectrum</td><td>filter = multiply by a mask on the plane: discs, rings, wedges</td></tr>
+  </table>
+  </div>
+  <h3>Check yourself</h3>
+  </div>
+  <div class="quiz prose" id="quiz"></div>
+</section>
+</main>
+
+<script src="img/images.js"></script>
+<script src="lib.js"></script>
+<script src="demos.js"></script>
+
+<!--ai:foot--><footer class="ai-foot"><a href="../index.html">Vision and Image Processing</a> &middot; Instructor: <a href="https://spinlabiitg.github.io/" target="_blank" rel="noopener">Neeraj Kumar Sharma</a>, IIT Guwahati &middot; <a href="../index.html#credits">data credits</a><span class="ai-lic">Text, figures and audio: <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener license">CC BY-NC 4.0</a> &middot; code: MIT</span></footer><!--/ai:foot-->
+</body>
+</html>
