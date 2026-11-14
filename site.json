@@ -12,8 +12,27 @@
   },
   "modules": [
     {
-      "id": "fourier-2d",
+      "id": "light-camera",
       "n": 1,
+      "title": "Light, eyes and cameras: where an image comes from",
+      "summary": "From light to three numbers per pixel: the plenoptic function and the slices devices record, the eye as a camera with rods, cones and a blind spot, spectra of lights and surfaces, three cones and metamers, photon counting and shot noise, the Bayer filter and demosaicing, and illusions that show the brain infers surfaces rather than reading pixels.",
+      "short": "The plenoptic function, the eye, spectra, cones and metamers, photon noise and the Bayer filter.",
+      "pages": [
+        {
+          "title": "Light, eyes and cameras",
+          "file": "light_camera/index.html",
+          "status": "live"
+        }
+      ],
+      "learn": [
+        "Every imaging device records only a slice of the plenoptic function",
+        "The eye and the camera both reduce a spectrum to three numbers, so different spectra can look the same",
+        "A sensor counts photons (noise √n) and sees one colour per pixel through the Bayer filter"
+      ]
+    },
+    {
+      "id": "fourier-2d",
+      "n": 2,
       "title": "Images as sums of gratings: the 2-D Fourier transform",
       "summary": "The 2-D Fourier transform built up from a single 1-D sinusoid: gratings and wave vectors, the frequency plane, slices and the projection-slice idea, rows-then-columns DFTs, the 8 × 8 Fourier basis, rebuilding a photo grating by grating, reading spectra, the wallpaper view and windowing, magnitude versus phase, filtering, and a lab for your own images.",
       "short": "Gratings, the frequency plane, magnitude and phase, windowing and filtering, with live demos on real photos.",
@@ -32,7 +51,7 @@
     },
     {
       "id": "gaze",
-      "n": 2,
+      "n": 3,
       "title": "Where the eyes go: gaze, reading and visual attention",
       "summary": "How people actually look: a sharp fovea and a blurry surround, reading as a sequence of fixations and saccades, the perceptual span and the moving-window paradigm, Yarbus's task-dependent scanpaths, gaze as visible attention, pop-out versus serial search, and what 'attention' means in neural networks.",
       "short": "Fovea and periphery, reading scanpaths, Yarbus's scenes, visual search, and attention in neural networks.",
@@ -56,11 +75,15 @@
     "pages": []
   },
   "credits": [
-    "Campus photographs (main building and aerial view): IIT Guwahati. Converted to grayscale and cropped for the demos.",
+    "Campus photographs (main building, aerial view and roundabout): IIT Guwahati. Cropped, and converted to grayscale for the Fourier demos.",
     "Module 2 images, all public domain: Ilya Repin, Unexpected Visitors (1884–88); reading scanpath recorded at Humanistlaboratoriet, Lund University (2005) and the redrawing of Yarbus's (1967) task-dependent scanpaths, both via Wikimedia Commons.",
     "KaTeX 0.16.11 (MIT licence) renders the equations; it is served from this site so pages work offline."
   ],
   "updates": [
+    {
+      "date": "2026-11-14",
+      "text": "New Module 1: light, eyes and cameras, with 9 live demos. The Fourier and gaze modules are now Modules 2 and 3."
+    },
     {
       "date": "2026-11-13",
       "text": "Module 2 added: where the eyes go, on gaze in reading and scenes, visual search and attention."

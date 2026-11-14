@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Light, eyes and cameras · VIP</title>
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+<script defer src="../assets/katex/katex.min.js"></script>
+<script defer src="../assets/katex/contrib/auto-render.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #F1F3F0; --surface: #FCFDFB; --surface-2: #E9EDE8;
+    --ink: #161D1A; --ink-soft: #35413C; --muted: #5E6C66;
+    --line: #CCD6D0; --line-strong: #9EB0A8;
+    --acc: #1B7A8A;      /* wave vector, chosen things */
+    --acc2: #B8691A;     /* highlights, conjugate partner */
+    --acc3: #6A4C9A;     /* projections, third component */
+    --good: #2E7D4F; --bad: #B23A3A;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0C1110; --surface: #121A18; --surface-2: #19231F;
+      --ink: #E8F0EC; --ink-soft: #C4D2CB; --muted: #869A91;
+      --line: #25332D; --line-strong: #3A4C44;
+      --acc: #4FD2E2; --acc2: #F0A94E; --acc3: #B497EA;
+      --good: #6CCB8F; --bad: #F08080;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0C1110; --surface: #121A18; --surface-2: #19231F;
+    --ink: #E8F0EC; --ink-soft: #C4D2CB; --muted: #869A91;
+    --line: #25332D; --line-strong: #3A4C44;
+    --acc: #4FD2E2; --acc2: #F0A94E; --acc3: #B497EA;
+    --good: #6CCB8F; --bad: #F08080;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 96px; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink-soft);
+    font-family: "Archivo", ui-sans-serif, system-ui, sans-serif; font-size: 17px; line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--acc); }
+  h1, h2, h3 { font-family: "Instrument Serif", ui-serif, Georgia, serif; font-weight: 400; color: var(--ink); margin: 0; text-wrap: balance; }
+  h1 { font-size: clamp(2.3rem, 6vw, 3.9rem); line-height: 1.05; }
+  h2 { font-size: clamp(1.8rem, 4vw, 2.5rem); line-height: 1.15; margin-bottom: 0.6rem; }
+  h3 { font-size: 1.45rem; margin: 1.6rem 0 0.4rem; }
+  .mono, code { font-family: "JetBrains Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  code { font-size: 0.86em; background: var(--surface-2); padding: 0.05em 0.35em; border-radius: 4px; }
+  .eyebrow { font-family: "JetBrains Mono", monospace; font-size: 0.72rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--acc2); font-weight: 500; }
+
+  .topbar {
+    position: relative; display: flex; align-items: center; gap: 1rem;
+    padding: 0.6rem clamp(1rem, 4vw, 2.4rem); background: color-mix(in srgb, var(--surface) 92%, transparent);
+    backdrop-filter: blur(6px); border-bottom: 1px solid var(--line);
+  }
+  .topbar .brand { font-family: "JetBrains Mono", monospace; font-size: 0.75rem; color: var(--ink); white-space: nowrap; }
+  .topbar nav { display: flex; gap: 0.9rem; overflow-x: auto; flex: 1; scrollbar-width: none; }
+  .topbar nav a { font-family: "JetBrains Mono", monospace; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); text-decoration: none; white-space: nowrap; }
+  .topbar nav a:hover { color: var(--acc); }
+  .themebtn { background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 6px; font: 500 0.7rem "JetBrains Mono", monospace; padding: 0.25rem 0.5rem; cursor: pointer; }
+
+  main { max-width: 1060px; margin: 0 auto; padding: 0 16px 5rem; }
+  .prose { max-width: 760px; }
+  section { padding-top: 3.2rem; }
+  .hero { padding-top: 3.5rem; }
+  .lede { font-size: 1.15rem; color: var(--ink-soft); max-width: 720px; }
+  .roadmap { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.5rem; margin: 1.6rem 0 0; padding: 0; list-style: none; counter-reset: r; }
+  .roadmap li { counter-increment: r; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 0.55rem 0.75rem; font-size: 0.92rem; }
+  .roadmap li::before { content: counter(r, decimal-leading-zero); font-family: "JetBrains Mono", monospace; color: var(--acc2); margin-right: 0.5rem; font-size: 0.75rem; }
+  .roadmap a { color: var(--ink); text-decoration: none; }
+  .secnum { font-family: "JetBrains Mono", monospace; font-size: 0.8rem; color: var(--acc2); display: block; margin-bottom: 0.2rem; }
+
+  .demo { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 1rem clamp(0.8rem, 2vw, 1.3rem) 1.1rem; margin: 1.4rem 0; }
+  .demo > .dhead { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: baseline; margin-bottom: 0.7rem; }
+  .demo > .dhead b { font-family: "JetBrains Mono", monospace; font-size: 0.74rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--acc); font-weight: 600; }
+  .demo > .dhead span { font-size: 0.92rem; color: var(--muted); }
+  .controls { display: flex; flex-wrap: wrap; gap: 0.6rem 1.4rem; align-items: center; margin-bottom: 0.9rem; }
+  .ctl { display: flex; align-items: center; gap: 0.5rem; font-size: 0.86rem; }
+  .ctl label { font-family: "JetBrains Mono", monospace; font-size: 0.78rem; color: var(--ink); white-space: nowrap; }
+  .ctl output { font-family: "JetBrains Mono", monospace; font-size: 0.78rem; color: var(--acc); min-width: 3.4em; }
+  input[type=range] { width: 140px; accent-color: var(--acc); }
+  select, .btn { font: 500 0.78rem "JetBrains Mono", monospace; background: var(--surface-2); color: var(--ink); border: 1px solid var(--line-strong); border-radius: 6px; padding: 0.3rem 0.6rem; cursor: pointer; }
+  .btn:hover { border-color: var(--acc); color: var(--acc); }
+  .btn.on { background: var(--acc); color: var(--surface); border-color: var(--acc); }
+  .chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+  .panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.9rem; }
+  .panels.two { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); max-width: 760px; }
+  .panels.four { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+  .panel { margin: 0; min-width: 0; }
+  .panel figcaption { font-size: 0.82rem; color: var(--muted); margin-top: 0.35rem; line-height: 1.4; }
+  .stack { position: relative; aspect-ratio: 1; background: #000; border-radius: 6px; overflow: hidden; }
+  .stack canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .stack canvas.ov { pointer-events: none; }
+  .stack.drag { cursor: crosshair; touch-action: none; }
+  canvas.px { image-rendering: pixelated; }
+  canvas.plot { width: 100%; height: 170px; display: block; }
+  .strip { width: 100%; height: 26px; image-rendering: pixelated; display: block; border-radius: 4px; }
+  .readout { display: flex; flex-wrap: wrap; gap: 0.3rem 1.2rem; margin-top: 0.8rem; font-family: "JetBrains Mono", monospace; font-size: 0.8rem; color: var(--ink); }
+  .readout span i { color: var(--muted); font-style: normal; }
+  .note { font-size: 0.88rem; color: var(--muted); margin: 0.7rem 0 0; }
+
+  .callout { border-left: 3px solid var(--acc2); background: var(--surface); padding: 0.7rem 1rem; border-radius: 0 8px 8px 0; margin: 1.2rem 0; }
+  .callout.key { border-color: var(--acc); }
+  .callout p { margin: 0.3rem 0; }
+  .katex-display { overflow-x: auto; overflow-y: hidden; padding: 0.2rem 0; }
+  .katex { font-size: 1.06em; }
+
+  .cmp { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin: 1rem 0; }
+  .cmp th, .cmp td { border-bottom: 1px solid var(--line); padding: 0.45rem 0.5rem; text-align: left; vertical-align: top; }
+  .cmp th { font-family: "JetBrains Mono", monospace; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 500; }
+  .tablewrap { overflow-x: auto; }
+
+  .drop { display: flex; align-items: center; justify-content: center; min-height: 84px; margin-bottom: 0.9rem; border: 2px dashed var(--line-strong); border-radius: 10px; background: var(--surface-2); color: var(--muted); text-align: center; padding: 0.8rem; cursor: pointer; font-size: 0.92rem; }
+  .drop strong { color: var(--ink); }
+  .drop.over { border-color: var(--acc); color: var(--acc); }
+  .drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  details.think { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 0.6rem 1rem; margin: 0.7rem 0; }
+  details.think summary { cursor: pointer; color: var(--ink); font-weight: 500; }
+  details.think summary::marker { color: var(--acc2); }
+  details.think[open] summary { margin-bottom: 0.4rem; }
+  details.think p { margin: 0.4rem 0 0.2rem; }
+  .quiz .q { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 0.8rem 1rem; margin: 0.8rem 0; }
+  .quiz .q p { margin: 0 0 0.5rem; color: var(--ink); }
+  .quiz .opts { display: flex; flex-direction: column; gap: 0.35rem; }
+  .quiz button.opt { text-align: left; background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 0.4rem 0.6rem; color: var(--ink-soft); font: inherit; font-size: 0.92rem; cursor: pointer; }
+  .quiz button.opt.right { border-color: var(--good); color: var(--good); }
+  .quiz button.opt.wrong { border-color: var(--bad); color: var(--bad); }
+  .quiz .why { display: none; font-size: 0.88rem; margin-top: 0.5rem; color: var(--muted); }
+  .quiz .q.done .why { display: block; }
+  footer { border-top: 1px solid var(--line); margin-top: 4rem; padding: 1.2rem 16px; font-size: 0.82rem; color: var(--muted); text-align: center; }
+  @media (max-width: 560px) { input[type=range] { width: 110px; } body { font-size: 16px; } }
+
+  .panels.three { grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); }
+  canvas.plot.tall { height: 220px; }
+  .tick { display: flex; align-items: center; gap: 0.45rem; font-size: 0.9rem; color: var(--ink-soft); cursor: pointer; }
+  #d2ctl { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
+  .readout.big { font-size: 0.86rem; flex-direction: column; gap: 0.35rem; }
+  .swatches { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.6rem; }
+  .swatches > div { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.8rem; color: var(--muted); }
+  .sw { width: 120px; height: 72px; border-radius: 8px; border: 1px solid var(--line-strong); }
+  canvas.sq { width: 100%; aspect-ratio: 1; height: auto; display: block; border-radius: 6px; }
+  .stack.sq { aspect-ratio: 1; }
+  .stack.wide { aspect-ratio: 2; }
+  .stack canvas { image-rendering: auto; }
+  .stack canvas.px { image-rendering: pixelated; }
+  canvas.wall { width: 100%; aspect-ratio: 3 / 2; display: block; border-radius: 6px; background: #000; }
+  .zooms { margin-top: 0.6rem; max-width: 560px; }
+  .zooms canvas { width: 100%; aspect-ratio: 1; image-rendering: pixelated; border-radius: 6px; background: #000; }
+  canvas.blind { width: 100%; height: 220px; display: block; border-radius: 8px; }
+  .eyefig { margin: 1.2rem 0; max-width: 900px; }
+  .eyefig svg { width: 100%; height: auto; display: block; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+  .eyefig figcaption { font-size: 0.82rem; color: var(--muted); margin-top: 0.35rem; }
+  .eyefig .sclera { fill: var(--surface-2); stroke: var(--line-strong); stroke-width: 2; }
+  .eyefig .cornea { fill: none; stroke: var(--acc); stroke-width: 3; }
+  .eyefig .iris { stroke: var(--acc3); stroke-width: 6; stroke-linecap: round; }
+  .eyefig .lens { fill: color-mix(in srgb, var(--acc) 25%, transparent); stroke: var(--acc); stroke-width: 2; }
+  .eyefig .retina { fill: none; stroke: var(--acc2); stroke-width: 5; }
+  .eyefig .fovea { fill: var(--acc2); }
+  .eyefig .nerve { fill: var(--line-strong); }
+  .eyefig .ray { stroke: var(--ink-soft); stroke-width: 1.2; stroke-dasharray: 5 4; }
+  .eyefig .lbl { fill: var(--ink); font: 13px "JetBrains Mono", monospace; }
+  .eyefig .body { fill: var(--surface-2); stroke: var(--line-strong); stroke-width: 2; }
+  .eyefig .barrel { fill: var(--surface-2); stroke: var(--line-strong); stroke-width: 2; }
+  .eyefig .sensor { fill: var(--acc2); }
+  .bayer-tile { display: grid; grid-template-columns: repeat(2, 42px); gap: 3px; margin: 0.6rem 0 1rem; }
+  .bayer-tile span { height: 42px; display: grid; place-items: center; font: 600 0.9rem "JetBrains Mono", monospace; color: #fff; border-radius: 4px; }
+  .bayer-tile .r { background: #c0392b; } .bayer-tile .g { background: #2e8b47; } .bayer-tile .b { background: #2f5fc4; }
+  .refs { font-size: 0.88rem; } .refs li { margin-bottom: 0.3rem; }
+</style>
+<!--ai:head--><link rel="stylesheet" href="../assets/site.css?v=592b11fb"><!--/ai:head-->
+</head>
+<body>
+<!--ai:nav--><nav class="ai-nav" aria-label="Course navigation"><div class="ai-nav-in"><a class="ai-brand" href="../index.html" title="Vision and Image Processing"><span class="ai-logo" aria-hidden="true">▦</span><span class="ai-brand-full">Vision and Image Processing</span><span class="ai-brand-short">VIP</span></a><span class="ai-where">Module 1 &middot; Light, eyes and cameras: where an image comes from</span><details class="ai-menu"><summary>All pages</summary><ul><li><a href="index.html" aria-current="page">1. Light, eyes and cameras</a></li><li><a href="../fourier_2d/index.html">2. The 2-D Fourier transform, built from the ground up</a></li><li><a href="../gaze/index.html">3. Where the eyes go: how people scan text and scenes</a></li></ul></details><span class="ai-step ai-prev ai-off">← prev</span><a class="ai-step ai-next" href="../fourier_2d/index.html" title="The 2-D Fourier transform, built from the ground up">next →</a></div></nav><!--/ai:nav-->
+<header class="topbar">
+  <span class="brand">On this page</span>
+  <nav>
+    <a href="#s1">Plenoptic</a><a href="#s2">The eye</a><a href="#s3">Spectra</a>
+    <a href="#s4">Three cones</a><a href="#s5">Sensor</a><a href="#s6">Bayer</a><a href="#s7">Illusions</a><a href="#s8">Quiz</a>
+  </nav>
+  <button class="themebtn" id="themebtn" type="button">theme</button>
+</header>
+
+<main>
+<section class="hero">
+  <div class="eyebrow">Module 1 · Tutorial</div>
+  <h1>Light, eyes and cameras: where an image comes from</h1>
+  <p class="lede">Before an image becomes an array of numbers it is light: a spread of wavelengths arriving from every direction.
+  This page follows that light into the eye and into a camera. Both throw most of it away, and in surprisingly similar ways.
+  The leftovers, three numbers per point, are what we call colour and what an image file stores.</p>
+  <ol class="roadmap">
+    <li><a href="#s1">The plenoptic function: all the light there is</a></li>
+    <li><a href="#s2">The eye: a camera made of tissue</a></li>
+    <li><a href="#s3">Light is a spectrum</a></li>
+    <li><a href="#s4">Three cones, three numbers</a></li>
+    <li><a href="#s5">A sensor counts photons</a></li>
+    <li><a href="#s6">The Bayer filter: colour from one sensor</a></li>
+    <li><a href="#s7">Do we see what is out there?</a></li>
+    <li><a href="#s8">Summary and quiz</a></li>
+  </ol>
+  <p class="note">The colours, spectra and images on this page are computed live in your browser. Your screen can only show colours inside its own range, so pure spectral colours appear slightly washed out.</p>
+</section>
+
+<!-- ============================================================ 1 -->
+<section id="s1">
+  <div class="prose">
+  <span class="secnum">01</span>
+  <h2>The plenoptic function: all the light there is</h2>
+  <p>Stand still and look around. What you could possibly see is the amount of light arriving from every direction. Write a direction with two angles, \(\theta\) (left–right) and \(\phi\) (up–down).
+  Light also comes in different wavelengths \(\lambda\), it changes with time \(t\), and it is different if you move your eye to another point \((V_x, V_y, V_z)\).
+  Adelson and Bergen (1991) called the function of all seven variables the <em>plenoptic function</em> (from Latin <i>plenus</i>, full, and <i>optic</i>):</p>
+  \[ P(\theta,\, \phi,\, \lambda,\, t,\, V_x,\, V_y,\, V_z) = \text{intensity of light of wavelength } \lambda \text{ arriving at } (V_x,V_y,V_z) \text{ from direction } (\theta,\phi) \text{ at time } t . \]
+  <div class="callout"><p><b>\(V\) is a place, not a motion.</b> \((V_x, V_y, V_z)\) is the <em>viewpoint</em>: where the eye, or the camera's lens centre, sits in space. It is not a velocity.
+  Turning your eyes or head on the spot keeps \(V\) (almost) fixed and only changes which directions \((\theta,\phi)\) you look at, so nothing new appears.
+  Walking somewhere else changes \(V\): near objects shift against far ones (parallax) and hidden things come into view.
+  Your two eyes are two viewpoints about 6.5 cm apart, and that small difference in \(V\) is what stereo depth uses. Movement through the scene is a viewpoint that changes with time, \(V(t)\).</p></div>
+  <p>It holds every photograph, every movie and every view anyone could ever see. No device records all of it.
+  Every imaging device records a <b>slice</b>: it fixes some variables, keeps a few samples of others, and adds up the rest.</p>
+  </div>
+  <div class="demo" id="d2">
+    <div class="dhead"><b>Demo 1 · Which slice does a device record?</b><span>Tick the variables the device keeps. The count assumes a 4000 × 3000 grid of directions.</span></div>
+    <div class="controls" id="d2ctl">
+      <label class="tick"><input type="checkbox" checked disabled> \(\theta,\phi\): 4000 × 3000 directions</label>
+      <label class="tick"><input type="checkbox" id="d2l"> \(\lambda\): 31 bands (every 10 nm) instead of 3 colours</label>
+      <label class="tick"><input type="checkbox" id="d2t"> \(t\): 30 frames per second for 10 s</label>
+      <label class="tick"><input type="checkbox" id="d2v"> \(V_x, V_y\): a 10 × 10 grid of viewpoints</label>
+      <label class="tick"><input type="checkbox" id="d2z"> \(V_z\): 10 depths as well</label>
+    </div>
+    <div class="readout big" id="d2out"></div>
+  </div>
+  <div class="prose">
+  <p>An ordinary photo is the smallest slice: one viewpoint, one instant, and the whole spectrum squeezed into three numbers. Sections 3 to 6 show why three numbers are enough for us, and how both the eye and the camera make them.</p>
+  </div>
+</section>
+
+<!-- ============================================================ 2 -->
+<section id="s2">
+  <div class="prose">
+  <span class="secnum">02</span>
+  <h2>The eye: a camera made of tissue</h2>
+  <p>The eye and a camera solve the same problem with the same parts: bend the light to form an image, control how much gets in, and turn the image into signals.</p>
+  </div>
+  <figure class="eyefig">
+    <svg viewBox="0 0 900 300" role="img" aria-label="Side-by-side sketch: the eye with cornea, iris, lens, retina, fovea, blind spot and optic nerve, and a camera with lens, aperture and sensor">
+      <g class="eye" transform="translate(40,20)">
+        <ellipse cx="190" cy="130" rx="150" ry="118" class="sclera"/>
+        <path d="M58 72 Q20 130 58 188" class="cornea"/>
+        <line x1="64" y1="78" x2="64" y2="108" class="iris"/><line x1="64" y1="152" x2="64" y2="182" class="iris"/>
+        <ellipse cx="88" cy="130" rx="16" ry="38" class="lens"/>
+        <path d="M290 40 Q352 130 290 220" class="retina"/>
+        <circle cx="338" cy="130" r="5" class="fovea"/>
+        <rect x="322" y="160" width="60" height="18" class="nerve" transform="rotate(18 322 160)"/>
+        <line x1="-30" y1="96" x2="338" y2="130" class="ray"/><line x1="-30" y1="164" x2="338" y2="130" class="ray"/>
+        <text x="20" y="62" class="lbl" text-anchor="end">cornea</text>
+        <text x="64" y="258" class="lbl" text-anchor="middle">iris + pupil</text>
+        <text x="100" y="56" class="lbl">lens</text>
+        <text x="250" y="26" class="lbl">retina</text>
+        <text x="350" y="120" class="lbl">fovea</text>
+        <text x="300" y="214" class="lbl">optic nerve (blind spot)</text>
+      </g>
+      <g class="cam" transform="translate(500,40)">
+        <rect x="120" y="20" width="250" height="200" rx="14" class="body"/>
+        <rect x="40" y="70" width="80" height="100" rx="6" class="barrel"/>
+        <ellipse cx="70" cy="120" rx="12" ry="44" class="lens"/>
+        <line x1="128" y1="70" x2="128" y2="100" class="iris"/><line x1="128" y1="140" x2="128" y2="170" class="iris"/>
+        <rect x="330" y="60" width="10" height="120" class="sensor"/>
+        <line x1="-20" y1="90" x2="335" y2="140" class="ray"/><line x1="-20" y1="150" x2="335" y2="100" class="ray"/>
+        <text x="70" y="62" class="lbl" text-anchor="middle">lens</text>
+        <text x="128" y="196" class="lbl" text-anchor="middle">aperture</text>
+        <text x="335" y="50" class="lbl" text-anchor="middle">sensor</text>
+      </g>
+    </svg>
+    <figcaption>Sketch, not to scale. In both, the image on the back surface is upside down; the brain, or the camera's software, turns it the right way up.</figcaption>
+  </figure>
+  <div class="prose">
+  <div class="tablewrap"><table class="cmp">
+    <tr><th>Job</th><th>Eye</th><th>Camera</th></tr>
+    <tr><td>Bend light into an image</td><td>cornea (most of the bending) and lens</td><td>lens</td></tr>
+    <tr><td>Focus</td><td>the lens changes shape</td><td>the lens moves</td></tr>
+    <tr><td>Control the light</td><td>iris: the pupil is about 2–8 mm wide</td><td>aperture (f-number) and exposure time</td></tr>
+    <tr><td>Turn light into signals</td><td>about 92 million rods and 4.6 million cones (Curcio et al., 1990)</td><td>millions of photosites</td></tr>
+    <tr><td>Send the signal on</td><td>about 1 million ganglion-cell fibres in the optic nerve</td><td>a data bus</td></tr>
+  </table></div>
+  <p>Two numbers in that table deserve a second look. About 97 million receptors feed about 1 million nerve fibres, so the retina compresses the image roughly a hundredfold before it leaves the eye.
+  And the two types of receptor do different jobs. <b>Cones</b> work in bright light and see colour. <b>Rods</b> are far more sensitive, work at night, and see only shades of grey. That is why colours fade on a moonlit walk.</p>
+  <p>The receptors are not spread evenly. Cones are packed into the fovea, the small pit that gives sharp central vision; rods take over in the periphery. Hover over the plot.</p>
+  </div>
+  <div class="demo" id="d3a">
+    <div class="dhead"><b>Demo 2 · Where the rods and cones are</b><span>Receptors per mm² across the retina of one eye</span></div>
+    <canvas class="plot tall" id="d3plot"></canvas>
+    <div class="readout" id="d3out">Hover over the plot.</div>
+    <p class="note">Schematic curves with the shape of Østerberg's (1935) classic counts; the peak values are approximate. Cone counts at the very centre vary from person to person, roughly 100,000 to over 300,000 per mm² (Curcio et al., 1990).</p>
+  </div>
+  <div class="prose">
+  <p>One stretch of the plot is empty. The optic nerve leaves the eye about 15° from the fovea, towards the nose, and there are no receptors there at all. Each eye has a blind spot about 5° wide, larger than ten full moons side by side. You can find yours.</p>
+  </div>
+  <div class="demo" id="d3b">
+    <div class="dhead"><b>Demo 3 · Find your blind spot</b><span>Close your left eye. Look at the cross with your right eye. Move slowly towards or away from the screen.</span></div>
+    <div class="controls"><div class="chips"><button class="btn on" data-b="dot">a dot</button><button class="btn" data-b="line">a dot on a line</button><button class="btn" data-b="stripes">a dot on stripes</button></div></div>
+    <canvas id="d3c" class="blind"></canvas>
+    <p class="note">At a distance of about 3½ times the gap between the cross and the dot, the dot disappears. With the line or the stripes, notice what you see in its place: the brain fills the hole with the surrounding pattern. You never notice your blind spot in daily life because the other eye covers it, and because of this filling-in.</p>
+  </div>
+  <div class="prose">
+  <p>Fields of view: one eye covers about 160° horizontally and 135° vertically, and the two eyes together about 200° by 135°. Only the 2° of the fovea is sharp, which is why the eyes keep moving; the <a href="../gaze/index.html">gaze module</a> follows those movements.</p>
+  </div>
+</section>
+
+<!-- ============================================================ 3 -->
+<section id="s3">
+  <div class="prose">
+  <span class="secnum">03</span>
+  <h2>Light is a spectrum</h2>
+  <p>Any patch of light is completely described, physically, by its <b>spectrum</b>: how much power (or how many photons per second) it carries at each wavelength between about 400 and 700 nm.
+  A laser puts everything at one wavelength. A hot filament spreads its light smoothly, more towards red the cooler it is. A white LED is a blue chip plus a yellow phosphor.</p>
+  <p>Most things we see do not make light; they reflect it. A surface reflects a fraction \(R(\lambda)\) of each wavelength. The light reaching your eye from it is the product of the illuminant \(E(\lambda)\) and the reflectance:</p>
+  \[ C(\lambda) = E(\lambda)\,R(\lambda). \]
+  <p>So the same banana sends different light to your eye at noon and under a street lamp. Try it.</p>
+  </div>
+  <div class="demo" id="d4">
+    <div class="dhead"><b>Demo 4 · Illuminant × surface = what reaches the eye</b><span>Pick a light and a surface</span></div>
+    <div class="controls">
+      <div class="ctl"><label for="d4e">light</label><select id="d4e">
+        <option value="sun">daylight (5800 K)</option><option value="tung">tungsten bulb (2850 K)</option><option value="candle">candle (1900 K)</option>
+        <option value="led">white LED</option><option value="na">sodium street lamp (589 nm)</option><option value="laser">red laser (650 nm)</option></select></div>
+      <div class="ctl"><label for="d4r">surface</label><select id="d4r">
+        <option value="paper">white paper</option><option value="tomato">tomato</option><option value="banana" selected>banana</option><option value="leaf">leaf</option><option value="grape">grape</option></select></div>
+      <label class="tick"><input type="checkbox" id="d4wb"> adapt to the light (white balance)</label>
+    </div>
+    <div class="panels three">
+      <figure class="panel"><canvas class="plot" id="d4pe"></canvas><figcaption>Illuminant \(E(\lambda)\)</figcaption></figure>
+      <figure class="panel"><canvas class="plot" id="d4pr"></canvas><figcaption>Reflectance \(R(\lambda)\)</figcaption></figure>
+      <figure class="panel"><canvas class="plot" id="d4pc"></canvas><figcaption>Reaching the eye \(C(\lambda)\)</figcaption></figure>
+    </div>
+    <div class="swatches"><div><div class="sw" id="d4sw"></div><span>the surface</span></div><div><div class="sw" id="d4white"></div><span>white paper, same light</span></div></div>
+    <p class="note">The reflectance curves are smooth illustrative shapes, not measurements. The swatch colours are computed from \(C(\lambda)\) with the CIE 1931 colour-matching functions.</p>
+  </div>
+  <div class="prose">
+  <p>Three things to try. Under the <b>sodium lamp</b>, every surface becomes the same orange; only its brightness changes. A one-wavelength light cannot show colour, and adapting to it does not help: you get shades of grey.
+  Under the <b>tungsten bulb</b> everything turns orange, white paper included. Now tick <i>adapt to the light</i>: the colours come back. Your brain does this adaptation all the time, and a camera does it with its white-balance setting.</p>
+  </div>
+</section>
+
+<!-- ============================================================ 4 -->
+<section id="s4">
+  <div class="prose">
+  <span class="secnum">04</span>
+  <h2>Three cones, three numbers</h2>
+  <p>A spectrum has a value at every wavelength, but the eye keeps only three numbers per point. There are three types of cone: <b>L</b>, <b>M</b> and <b>S</b> (long, medium and short wavelength, loosely "red", "green" and "blue").
+  Each type adds up the incoming light weighted by its own sensitivity curve:</p>
+  \[ L = \int C(\lambda)\,\bar l(\lambda)\,d\lambda, \qquad M = \int C(\lambda)\,\bar m(\lambda)\,d\lambda, \qquad S = \int C(\lambda)\,\bar s(\lambda)\,d\lambda . \]
+  <p>That is a projection: an infinite-dimensional spectrum squeezed onto three numbers. Two different spectra that give the same \((L, M, S)\) look exactly the same. They are called <b>metamers</b>, and they are why a screen with only red, green and blue dots can show you a yellow flower.</p>
+  <p>The overall sensitivity of the eye in daylight, the sum that sets how bright things look, peaks at about 555 nm, a yellowish green. Green light looks brighter than blue or red light of the same power. Remember this for the Bayer filter in Section 6.</p>
+  </div>
+  <div class="demo" id="d5">
+    <div class="dhead"><b>Demo 5 · Two spectra, one colour</b><span>A pure wavelength, and your screen's red, green and blue mixed to look the same</span></div>
+    <div class="controls">
+      <div class="ctl"><label for="d5l">target λ</label><input type="range" id="d5l" min="420" max="680" value="580"><output id="d5lv"></output></div>
+    </div>
+    <div class="panels two">
+      <figure class="panel"><canvas class="plot tall" id="d5plot"></canvas><figcaption>Two lights. The thin vertical line is the target: all its power at one wavelength. The filled humps are a typical screen's red, green and blue, each turned up by the amount needed. Faint curves: the three cone sensitivities.</figcaption></figure>
+      <figure class="panel"><canvas class="plot tall" id="d5bars"></canvas><figcaption>What the three cones report for each light. Solid bars: the target. Light bars: the screen mix. Same bars means the same colour.</figcaption></figure>
+    </div>
+    <div class="swatches"><div><div class="sw" id="d5t"></div><span>target light</span></div><div><div class="sw" id="d5m"></div><span>screen mix</span></div></div>
+    <div class="readout" id="d5out"></div>
+    <p class="note">The screen's primaries are modelled as smooth humps peaking near 615, 535 and 455 nm, roughly like an LED or OLED display. Cone curves are estimated from the CIE 1931 colour-matching functions (analytic fit by Wyman, Sloan and Shirley, 2013) with the Hunt–Pointer–Estévez matrix.</p>
+  </div>
+  <div class="prose">
+  <p>Look at the left plot: the two spectra have almost nothing in common, yet the cone bars agree and the swatches match. That is a metamer, and it is all a screen ever does. It never copies the spectrum of the flower, only its three cone numbers. The three amounts it uses are the R, G, B values stored in the image file (Section 6).</p>
+  <p>Now move the target to about 490–510 nm (cyan-green). The screen's red has to go <em>negative</em>, which no screen can do. With red switched off, the mix is paler and the bars no longer agree. Every display covers only a triangle of the colours we can see, its <em>gamut</em>; a pure spectral colour always lies just outside it.</p>
+  <div class="callout">
+    <p><b>Is more cones better?</b> The mantis shrimp is often called the champion of colour vision: it has 12 types of colour receptor (16 photoreceptor types in all, some for ultraviolet and polarised light), against our 3.
+    Yet when Thoen and colleagues (2014) tested them, the shrimp could not tell apart colours 12–25 nm apart, which humans separate easily.
+    The shrimp seems to recognise colours directly, one receptor type each, instead of comparing receptors as we do. More sensors is not the same as finer discrimination; how the numbers are compared matters too.</p>
+  </div>
+  </div>
+</section>
+
+<!-- ============================================================ 5 -->
+<section id="s5">
+  <div class="prose">
+  <span class="secnum">05</span>
+  <h2>A sensor counts photons</h2>
+  <p>A camera sensor is a grid of photosites. During the exposure time \(T\) each one counts the photons that land on it. Photons arrive at random, so even a perfectly steady light gives a count that varies from shot to shot.
+  The count follows a Poisson distribution, whose spread is the square root of its mean:</p>
+  \[ n \sim \text{Poisson}(\bar n), \qquad \bar n \propto \text{brightness} \times T, \qquad \text{SNR} = \frac{\bar n}{\sqrt{\bar n}} = \sqrt{\bar n}. \]
+  <p>The count is then turned into a number with \(N\) bits, one of \(2^N\) levels. These are the same two steps as for sound, <b>sampling</b> (here: in space, on the photosite grid) and <b>quantization</b> (in level).
+  The rest of this section unpacks the SNR formula, and why few photons show up as grain rather than just darkness.</p>
+
+  <h3>Where \(\sqrt{\bar n}\) comes from</h3>
+  <p>Point one photosite at a steady light. Chop the exposure into a huge number \(K\) of tiny time slots, so short that each holds at most one photon.
+  In each slot a photon arrives with a small probability \(p\), independently of every other slot. The count \(n\) is the number of slots that got a photon: a sum of \(K\) independent yes/no events.</p>
+  <p>One slot contributes 1 with probability \(p\) and 0 otherwise, so its mean is \(p\) and its variance is \(p(1-p)\). For a sum of independent events, the means add and the variances add:</p>
+  \[ \bar n = Kp, \qquad \sigma^2 = Kp(1-p) \approx Kp = \bar n \quad (\text{because } p \text{ is tiny}) \qquad\Rightarrow\qquad \sigma = \sqrt{\bar n}. \]
+  <p>The variance equals the mean; that is the defining property of the Poisson distribution. The signal is the average count \(\bar n\), the noise is the typical swing \(\sigma\), so</p>
+  \[ \text{SNR} = \frac{\bar n}{\sigma} = \frac{\bar n}{\sqrt{\bar n}} = \sqrt{\bar n}, \qquad \text{relative error} = \frac{1}{\sqrt{\bar n}}. \]
+  <div class="tablewrap"><table class="cmp">
+    <tr><th>Photons per pixel \(\bar n\)</th><th>Typical swing \(\sqrt{\bar n}\)</th><th>Relative error</th><th>Looks</th></tr>
+    <tr><td>10,000 (daylight)</td><td>± 100</td><td>1%</td><td>smooth</td></tr>
+    <tr><td>100 (dim room)</td><td>± 10</td><td>10%</td><td>faint grain</td></tr>
+    <tr><td>9 (night)</td><td>± 3</td><td>33%</td><td>heavy grain</td></tr>
+  </table></div>
+  <p>More light brings <em>more</em> noise in absolute terms (±100 against ±3), but far less noise compared with the signal. That ratio is what the eye judges.</p>
+
+  <h3>Why few photons look grainy, not just dark</h3>
+  <p>Each photosite draws its own random count, independently of its neighbours. Picture a plain grey wall at night, with every pixel expecting 9 photons. If every pixel got exactly 9, you would see a smooth, dark wall.
+  Instead the pixels get 7, 12, 9, 5, 11, 14, 6 … The flat wall turns into speckle, and that pixel-to-pixel speckle <em>is</em> the grain.</p>
+  <p>Then the camera makes it visible. A night photo should not come out black, so the camera multiplies every count by a large gain (that is what raising the <b>ISO</b> does). The gain scales the signal and its swings by the same factor, so the 33% relative error stays.
+  The picture is now bright enough for you to see it. Gain cannot remove noise; only more photons can: a longer exposure, a wider aperture or a bigger photosite.</p>
+  </div>
+  <div class="demo" id="d6w">
+    <div class="dhead"><b>Demo 6 · One grey wall, many pixels</b><span>Every pixel looks at the same evenly lit wall and counts its photons</span></div>
+    <div class="controls">
+      <div class="ctl"><label for="d6wn">photons per pixel n̄</label><input type="range" id="d6wn" min="0" max="100" value="24"><output id="d6wnv"></output></div>
+      <label class="tick"><input type="checkbox" id="d6wg" checked> camera gain (ISO): brighten to mid-grey</label>
+      <button class="btn" id="d6wshot" type="button">take another shot</button>
+    </div>
+    <div class="panels two">
+      <figure class="panel"><canvas class="wall" id="d6wc"></canvas><figcaption>Each square is one pixel. When there are few photons, each square shows its count.</figcaption></figure>
+      <figure class="panel"><canvas class="plot tall" id="d6wh"></canvas><figcaption>How many pixels got each count. The dashed line is \(\bar n\); the shaded band is \(\bar n \pm \sqrt{\bar n}\), which holds about two-thirds of the pixels.</figcaption></figure>
+    </div>
+    <div class="readout" id="d6wout"></div>
+    <p class="note">Try 9 photons, then 10,000. Then switch the gain off: at night the wall is almost black, and the grain hides in the dark until the gain brings it up.</p>
+  </div>
+  <div class="prose">
+  <p>Two more effects add to this in a real camera. With a Bayer filter (Section 6) the red, green and blue photosites fluctuate independently, so night grain is coloured. And the sensor's own electronics add a small fixed amount of <em>read noise</em> to every pixel, which matters most when the photon count is small.
+  Now the same thing on a photo:</p>
+  </div>
+  <div class="demo" id="d6">
+    <div class="dhead"><b>Demo 6b · Photon counting on a photo</b><span>Each pixel and colour gets a random photon count, then is quantized</span></div>
+    <div class="controls">
+      <div class="ctl"><label for="d6n">photons (white)</label><input type="range" id="d6n" min="0" max="100" value="62"><output id="d6nv"></output></div>
+      <div class="ctl"><label for="d6b">bits</label><input type="range" id="d6b" min="1" max="8" value="8"><output id="d6bv"></output></div>
+      <div class="chips"><button class="btn on" data-img="roundabout">roundabout</button><button class="btn" data-img="flag">main building</button></div>
+    </div>
+    <div class="panels two">
+      <figure class="panel"><canvas class="sq" id="d6a" width="384" height="384"></canvas><figcaption>The scene (the photo, treated as the true brightness)</figcaption></figure>
+      <figure class="panel"><canvas class="sq" id="d6c" width="384" height="384"></canvas><figcaption>What the sensor records</figcaption></figure>
+    </div>
+    <div class="readout" id="d6out"></div>
+  </div>
+  <div class="prose">
+  <p>Halving the exposure halves the photon count but cuts the signal-to-noise ratio only by \(\sqrt 2\). Now set plenty of photons and drop the bits to 2 or 3: even a noise-free picture breaks into flat bands of colour. Noise and quantization are two separate losses. A later module picks up the array these numbers fill.</p>
+  </div>
+</section>
+
+<!-- ============================================================ 6 -->
+<section id="s6">
+  <div class="prose">
+  <span class="secnum">06</span>
+  <h2>The Bayer filter: colour from one sensor</h2>
+  <p>A photosite counts photons; it cannot tell their wavelength. To see colour, most cameras put a tiny colour filter over each photosite, in the pattern Bryce Bayer patented at Kodak in 1976:</p>
+  <div class="bayer-tile" aria-hidden="true"><span class="r">R</span><span class="g">G</span><span class="g">G</span><span class="b">B</span></div>
+  <p>Each 2 × 2 block has one red, one blue and <b>two green</b> filters, so half of all photosites are green. That matches the eye: we are most sensitive near green, and green carries most of the fine detail we notice.
+  The sensor records only one colour at each pixel, the <b>raw mosaic</b>. The camera then estimates the two missing colours at every pixel from the neighbours. This step is called <b>demosaicing</b>. The simplest version averages the nearest pixels of the right colour:</p>
+  \[ \hat G = \tfrac14\big(G_{\uparrow}+G_{\downarrow}+G_{\leftarrow}+G_{\rightarrow}\big) \text{ at a red or blue pixel}, \quad \hat R, \hat B: \text{ average of the 2 or 4 nearest red (blue) pixels.} \]
+  <p>Two-thirds of the numbers in every colour photo are estimates. Usually you cannot tell, but fine stripes give the game away.</p>
+  </div>
+  <div class="demo" id="d7">
+    <div class="dhead"><b>Demo 7 · Mosaic and demosaic</b><span>Hover over any image to magnify the same spot in all three</span></div>
+    <div class="controls">
+      <div class="chips" id="d7img"><button class="btn on" data-img="roundabout">roundabout</button><button class="btn" data-img="flag">main building</button><button class="btn" data-img="stripes">fine stripes</button></div>
+      <div class="chips" id="d7ch"><button class="btn on" data-ch="rgb">R+G+B</button><button class="btn" data-ch="0">only R</button><button class="btn" data-ch="1">only G</button><button class="btn" data-ch="2">only B</button></div>
+    </div>
+    <label class="drop" id="d7drop"><input type="file" accept="image/*" id="d7file"><span>Or <strong>drop your own photo</strong> here (it stays in your browser)</span></label>
+    <div class="panels three">
+      <figure class="panel"><div class="stack sq"><canvas id="d7a" width="384" height="384"></canvas><canvas class="ov" id="d7ao"></canvas></div><figcaption>The scene</figcaption></figure>
+      <figure class="panel"><div class="stack sq"><canvas id="d7b" width="384" height="384"></canvas><canvas class="ov" id="d7bo"></canvas></div><figcaption>Raw mosaic: one colour per pixel</figcaption></figure>
+      <figure class="panel"><div class="stack sq"><canvas id="d7c" width="384" height="384"></canvas><canvas class="ov" id="d7co"></canvas></div><figcaption>Demosaiced (bilinear)</figcaption></figure>
+    </div>
+    <div class="panels three zooms">
+      <canvas class="px" id="d7za" width="24" height="24"></canvas><canvas class="px" id="d7zb" width="24" height="24"></canvas><canvas class="px" id="d7zc" width="24" height="24"></canvas>
+    </div>
+    <div class="readout" id="d7out"></div>
+  </div>
+  <div class="prose">
+  <p>On the photos, the demosaiced image is hard to tell from the scene unless you zoom in on sharp edges. On the fine stripes, colours appear that are not there at all (false colour) and edges get a zip-like pattern.
+  Real cameras use smarter demosaicing that follows edges, and many add a slightly blurring filter in front of the sensor to keep stripes this fine from reaching it. The <i>only R / G / B</i> buttons show the three channels that every colour image file stores.</p>
+  </div>
+</section>
+
+<!-- ============================================================ 7 -->
+<section id="s7">
+  <div class="prose">
+  <span class="secnum">07</span>
+  <h2>Do we see what is out there?</h2>
+  <p>A camera reports the number of photons. The visual system reports what it thinks the surface is like. Those are different questions, and the difference shows up as illusions.
+  In the picture below, tile A is a dark tile in the light, and tile B is a light tile in a shadow.</p>
+  </div>
+  <div class="demo" id="d8">
+    <div class="dhead"><b>Demo 8 · Same pixels, different greys</b><span>Hover to read the pixel value under the pointer</span></div>
+    <div class="controls"><div class="chips"><button class="btn" id="d8rev">show only A and B</button><button class="btn" id="d8bar">join A and B with a bar</button></div></div>
+    <div class="panels two">
+      <figure class="panel"><div class="stack sq"><canvas id="d8c" width="480" height="480"></canvas></div><figcaption>A checkerboard with a cylinder's soft shadow, drawn for this page in the style of Adelson's (1995) checker-shadow illusion</figcaption></figure>
+      <figure class="panel"><div class="stack wide"><canvas id="d8g" width="480" height="240"></canvas></div><figcaption>Simultaneous contrast: the two small squares have the same grey. Drag the slider to move them.</figcaption>
+        <div class="ctl" style="margin-top:.5rem"><label for="d8s">gap</label><input type="range" id="d8s" min="0" max="100" value="70"></div></figure>
+    </div>
+    <div class="readout" id="d8out">Hover over the checkerboard.</div>
+  </div>
+  <div class="prose">
+  <p>A and B have exactly the same pixel value. Your visual system discounts the shadow, because a light tile in shadow is what such a pattern almost always means in the real world.
+  This is the same adaptation as the white balance in Demo 4, and the reason the brain is good at recognising objects under any light.
+  Other famous cases: the Thatcher illusion (Thompson, 1980), where an upside-down face with its eyes and mouth flipped looks normal until you turn it the right way up, and the "dress" photo of 2015 that people saw as blue–black or white–gold depending on the light they assumed.</p>
+  <div class="callout key"><p><b>Why this matters for image processing.</b> The numbers in an image are photon counts, not surface colours. Two pixels with the same value can belong to different materials, and one material can give very different values. Much of computer vision is the work of undoing the light to recover the surface.</p></div>
+  </div>
+</section>
+
+<!-- ============================================================ 8 -->
+<section id="s8">
+  <div class="prose">
+  <span class="secnum">08</span>
+  <h2>Summary</h2>
+  <div class="tablewrap"><table class="cmp">
+    <tr><th>Stage</th><th>What happens</th><th>What is lost or added</th></tr>
+    <tr><td>Plenoptic function</td><td>All light at every direction, wavelength, time and place</td><td>Any device keeps only a slice</td></tr>
+    <tr><td>Eye</td><td>Cornea and lens form an image; rods and cones sample it, densely only at the fovea</td><td>Blind spot; ~100:1 compression in the retina</td></tr>
+    <tr><td>Spectrum</td><td>\(C(\lambda)=E(\lambda)R(\lambda)\)</td><td>The light changes the signal, the surface does not change</td></tr>
+    <tr><td>Three cones</td><td>Spectrum → \((L,M,S)\)</td><td>Metamers: different spectra, same colour</td></tr>
+    <tr><td>Sensor</td><td>Count photons in time \(T\), quantize to \(N\) bits</td><td>Shot noise \(\sqrt{\bar n}\), quantization steps</td></tr>
+    <tr><td>Bayer filter</td><td>One colour per photosite, then demosaicing</td><td>Two-thirds of the values are estimates</td></tr>
+    <tr><td>Perception</td><td>The brain infers surfaces</td><td>Same pixels can look different</td></tr>
+  </table></div>
+  <h3>Check yourself</h3>
+  </div>
+  <div class="quiz prose" id="quiz"></div>
+  <div class="prose">
+  <h3>References</h3>
+  <ul class="refs">
+    <li>Adelson, E.H. &amp; Bergen, J.R. (1991). The plenoptic function and the elements of early vision. In <em>Computational Models of Visual Processing</em>, MIT Press.</li>
+    <li>Adelson, E.H. (1995). Checker-shadow illusion. MIT.</li>
+    <li>Bayer, B.E. (1976). Color imaging array. US Patent 3,971,065.</li>
+    <li>Curcio, C.A., Sloan, K.R., Kalina, R.E. &amp; Hendrickson, A.E. (1990). Human photoreceptor topography. <em>Journal of Comparative Neurology</em>, 292, 497–523.</li>
+    <li>Østerberg, G. (1935). Topography of the layer of rods and cones in the human retina. <em>Acta Ophthalmologica</em>, Suppl. 6.</li>
+    <li>Thoen, H.H., How, M.J., Chiou, T.-H. &amp; Marshall, J. (2014). A different form of color vision in mantis shrimp. <em>Science</em>, 343, 411–413.</li>
+    <li>Thompson, P. (1980). Margaret Thatcher: a new illusion. <em>Perception</em>, 9, 483–484.</li>
+    <li>Wyman, C., Sloan, P.-P. &amp; Shirley, P. (2013). Simple analytic approximations to the CIE XYZ color matching functions. <em>Journal of Computer Graphics Techniques</em>, 2(2).</li>
+    <li>Gonzalez, R.C. &amp; Woods, R.E. <em>Digital Image Processing</em>, chapter 2 (further reading).</li>
+  </ul>
+  </div>
+</section>
+</main>
+
+<script src="img/images.js"></script>
+<script src="demos.js"></script>
+
+
+<!--ai:foot--><footer class="ai-foot"><a href="../index.html">Vision and Image Processing</a> &middot; Instructor: <a href="https://spinlabiitg.github.io/" target="_blank" rel="noopener">Neeraj Kumar Sharma</a>, IIT Guwahati &middot; <a href="../index.html#credits">data credits</a><span class="ai-lic">Text, figures and audio: <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener license">CC BY-NC 4.0</a> &middot; code: MIT</span></footer><!--/ai:foot-->
+</body>
+</html>

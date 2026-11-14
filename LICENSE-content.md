@@ -25,7 +25,7 @@ Suggested attribution:
 
 ## Third-party material (not covered by the licences above)
 
-* **Campus photographs** (`docs/fourier_2d/img/`): IIT Guwahati. Converted to grayscale and cropped.
+* **Campus photographs** (`docs/fourier_2d/img/`, `docs/light_camera/img/`): IIT Guwahati. Cropped; converted to grayscale for the Fourier module.
 * **Gaze images** (`docs/gaze/img/`), public domain: Ilya Repin, *Unexpected Visitors* (1884–88); reading scanpath,
   Humanistlaboratoriet, Lund University (2005), [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Reading_Fixations_Saccades.jpg);
   Yarbus (1967) scanpaths redrawing, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Yarbus_The_Visitor.jpg).

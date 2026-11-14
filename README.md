@@ -14,16 +14,18 @@ docs/              the published site
   index.html       generated home page (do not edit by hand)
   assets/site.css  shared navigation, footer and home-page styles (namespaced .ai-*)
   assets/katex/    KaTeX 0.16.11 (MIT), served locally so equations render offline too
-  fourier_2d/      Module 1: the 2-D Fourier transform (index.html, lib.js = FFT and drawing, demos.js, img/)
-  gaze/            Module 2: gaze, reading and visual attention (index.html, img/)
+  light_camera/    Module 1: light, eyes and cameras (index.html, demos.js, img/)
+  fourier_2d/      Module 2: the 2-D Fourier transform (index.html, lib.js = FFT and drawing, demos.js, img/)
+  gaze/            Module 3: gaze, reading and visual attention (index.html, img/)
 ```
 
 ## Modules
 
 | # | Module | Page(s) |
 |---|---|---|
-| 1 | Images as sums of gratings: the 2-D Fourier transform | `fourier_2d/index.html` |
-| 2 | Where the eyes go: gaze, reading and visual attention | `gaze/index.html` |
+| 1 | Light, eyes and cameras: where an image comes from | `light_camera/index.html` |
+| 2 | Images as sums of gratings: the 2-D Fourier transform | `fourier_2d/index.html` |
+| 3 | Where the eyes go: gaze, reading and visual attention | `gaze/index.html` |
 
 ## Working on the site
 
@@ -44,7 +46,7 @@ python tools/check.py
 
 ## Data
 
-* **Campus photographs** (IIT Guwahati) in `docs/fourier_2d/img/`: grayscale 256 × 256 crops. `img/images.js` embeds the same
+* **Campus photographs** (IIT Guwahati): grayscale 256 × 256 crops in `docs/fourier_2d/img/`, colour 384 × 384 crops in `docs/light_camera/img/`. `img/images.js` embeds the same
   images as data URIs so the canvas demos also work when a page is opened straight from disk.
 * **Gaze images** in `docs/gaze/img/`, all public domain: Repin's *Unexpected Visitors*, a reading scanpath
   (Humanistlaboratoriet, Lund University) and the Yarbus (1967) redrawing, the last two from Wikimedia Commons.
